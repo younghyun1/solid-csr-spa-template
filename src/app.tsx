@@ -25,11 +25,6 @@ const App: Component = (props: { children: Element }) => {
               About
             </A>
           </li>
-          <li class="py-2 px-4">
-            <A href="/error" class="no-underline hover:underline">
-              Error
-            </A>
-          </li>
 
           <li class="text-sm flex items-center space-x-1 ml-auto">
             <span>URL:</span>
