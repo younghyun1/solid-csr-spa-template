@@ -2,6 +2,8 @@ import { Suspense, type Component, onMount } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import TopBar from "./components/TopBar"; // <-- Add this line
 import { checkAuth } from "./services/auth/auth";
+import { createEffect } from "solid-js";
+import { theme, applyTheme } from "./state/theme";
 
 const App: Component = (props: { children: Element }) => {
   const location = useLocation();
@@ -9,19 +11,22 @@ const App: Component = (props: { children: Element }) => {
   onMount(() => {
     checkAuth();
   });
+  createEffect(() => {
+    applyTheme(theme());
+  });
 
   return (
     <>
       <TopBar />
-      <nav class="bg-gray-200 text-gray-900 px-4 transition-colors duration-150 dark:bg-gray-900 dark:text-gray-100">
+      <nav class="bg-white text-gray-900 px-4 transition-colors duration-90 dark:bg-gray-900 dark:text-gray-100">
         <ul class="flex items-center">
           <li class="py-2 px-4">
-            <A href="/" class="no-underline hover:underline transition-colors duration-150">
+            <A href="/" class="no-underline hover:underline transition-colors duration-90">
               Home
             </A>
           </li>
           <li class="py-2 px-4">
-            <A href="/about" class="no-underline hover:underline transition-colors duration-150">
+            <A href="/about" class="no-underline hover:underline transition-colors duration-90">
               About
             </A>
           </li>
@@ -29,7 +34,7 @@ const App: Component = (props: { children: Element }) => {
           <li class="text-sm flex items-center space-x-1 ml-auto">
             <span>URL:</span>
             <input
-              class="w-75px p-1 bg-white text-sm rounded-lg dark:bg-gray-800 dark:text-white transition-colors duration-150"
+              class="w-75px p-1 bg-white text-sm rounded-lg dark:bg-gray-800 dark:text-white transition-colors duration-90"
               type="text"
               readOnly
               value={location.pathname}
@@ -38,7 +43,7 @@ const App: Component = (props: { children: Element }) => {
         </ul>
       </nav>
 
-      <main class="transition-colors duration-150 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen">
+      <main class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen">
         <Suspense>{props.children}</Suspense>
       </main>
     </>

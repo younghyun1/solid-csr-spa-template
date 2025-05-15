@@ -26,19 +26,19 @@ const handleLogout = async () => {
 };
 
 const TopBar = () => (
-  <header class="bg-black text-white px-6 py-3 flex items-center justify-between shadow-md transition-colors duration-150">
+  <header class="bg-white text-gray-900 dark:bg-black dark:text-white px-6 py-3 flex items-center justify-between shadow-md transition-colors duration-90">
     <div class="flex items-center gap-3">
       <a href="/" class="text-2xl font-bold tracking-tight">
         Younghyun&apos;s Blog
       </a>
       <button
         type="button"
-        class="ml-4 text-xs border px-2 py-1 rounded border-gray-400 bg-gray-800 text-gray-100 hover:bg-gray-700 transition-all duration-150 flex items-center gap-1"
+        class="ml-4 text-xs border px-2 py-1 rounded border-gray-300 dark:border-gray-400 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-90 flex items-center gap-1"
         aria-label="Toggle dark/light mode"
         onClick={toggleTheme}
       >
-        <span class="inline-block transition-colors duration-150">{theme() === "dark" ? "🌙" : "☀️"}</span>
-        <span class="transition-colors duration-150">{theme() === "dark" ? "Dark" : "Light"}</span>
+        <span class="inline-block transition-colors duration-90">{theme() === "dark" ? "🌙" : "☀️"}</span>
+        <span class="transition-colors duration-90">{theme() === "dark" ? "Dark" : "Light"}</span>
       </button>
     </div>
     <Show
@@ -50,7 +50,7 @@ const TopBar = () => (
           </span>
           <a
             href="/login"
-            class="bg-gray-900 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded transition-colors duration-150"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-4 py-2 rounded transition-colors duration-90 dark:bg-gray-900 dark:hover:bg-gray-700 dark:text-white"
           >
             Login
           </a>
@@ -84,9 +84,9 @@ const TopBar = () => (
             />
           </button>
           <Show when={menuOpen()}>
-            <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-150">
+            <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-90">
               <button
-                class="w-full text-left px-4 py-2 hover:bg-gray-100 hover:dark:bg-gray-800 rounded flex items-center gap-2 transition-colors duration-150"
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 hover:dark:bg-gray-800 rounded flex items-center gap-2 transition-colors duration-90"
                 onClick={handleLogout}
               >
                 <svg
