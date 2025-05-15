@@ -5,117 +5,54 @@ function LoginPage() {
   const [password, setPassword] = createSignal("");
 
   return (
-    <div style={{
-      display: "flex",
-      "justify-content": "center",
-      "align-items": "center",
-      height: "100vh",
-      background: "#f5f5f5"
-    }}>
-      <div style={{
-        padding: "2rem",
-        "border-radius": "8px",
-        background: "white",
-        "box-shadow": "0 2px 8px rgba(0, 0, 0, 0.12)",
-        "min-width": "350px",
-        display: "flex",
-        "flex-direction": "column",
-        "align-items": "center"
-      }}>
-        <h2 style={{ "margin-bottom": "1.5rem" }}>Login</h2>
+    <div class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-150">
+      <div class="p-8 rounded-lg bg-white dark:bg-gray-800 shadow-xl min-w-[350px] flex flex-col items-center transition-colors duration-150">
+        <h2 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-150">Login</h2>
         <input
           type="email"
           placeholder="Email"
           value={email()}
           onInput={e => setEmail(e.currentTarget.value)}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            "margin-bottom": "1rem",
-            "font-size": "1rem",
-            "border-radius": "4px",
-            border: "1px solid #ccc"
-          }}
+          class="w-full mb-4 text-base rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-150"
         />
         <input
           type="password"
           placeholder="Password"
           value={password()}
           onInput={e => setPassword(e.currentTarget.value)}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            "margin-bottom": "1.5rem",
-            "font-size": "1rem",
-            "border-radius": "4px",
-            border: "1px solid #ccc"
-          }}
+          class="w-full mb-6 text-base rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-150"
         />
-        <div style={{
-          display: "flex",
-          "justify-content": "space-between",
-          width: "100%",
-          "margin-bottom": "1.5rem"
-        }}>
+        <div class="flex justify-between w-full mb-6">
           <button
-            style={{
-              "background": "none",
-              "border": "none",
-              "color": "#428bca",
-              "cursor": "pointer",
-              "font-size": "0.95rem",
-              "padding": 0
-            }}
+            class="bg-transparent border-none text-blue-600 dark:text-blue-400 cursor-pointer text-sm p-0 hover:underline"
             tabIndex={-1}
+            type="button"
           >
             Find Account
           </button>
           <button
-            style={{
-              "background": "none",
-              "border": "none",
-              "color": "#428bca",
-              "cursor": "pointer",
-              "font-size": "0.95rem",
-              "padding": 0
-            }}
+            class="bg-transparent border-none text-blue-600 dark:text-blue-400 cursor-pointer text-sm p-0 hover:underline"
             tabIndex={-1}
+            type="button"
           >
             Find Password
           </button>
         </div>
         <button
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            "font-size": "1rem",
-            "background": "#428bca",
-            color: "white",
-            border: "none",
-            "border-radius": "4px",
-            "cursor": "pointer",
-            "margin-bottom": "1rem"
-          }}
+          class="w-full py-3 text-base bg-blue-600 hover:bg-blue-700 text-white rounded mb-3 transition-colors duration-150 font-semibold"
+          type="submit"
         >
           Login
         </button>
         <button
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            "font-size": "1rem",
-            "background": "#eaeaea",
-            color: "#428bca",
-            border: "none",
-            "border-radius": "4px",
-            "cursor": "pointer"
-          }}
+          class="w-full py-3 text-base bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 rounded transition-colors duration-150 font-semibold"
+          type="button"
         >
           Register
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 export default LoginPage;

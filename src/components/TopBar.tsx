@@ -1,6 +1,7 @@
 import { Show, createSignal, onCleanup } from "solid-js";
 import { isAuthenticated, user } from "../state/auth";
 import { logout } from "../services/auth/auth";
+import { theme, toggleTheme } from "../state/theme";
 
 const [menuOpen, setMenuOpen] = createSignal(false);
 
@@ -25,11 +26,20 @@ const handleLogout = async () => {
 };
 
 const TopBar = () => (
-  <header class="bg-black text-white px-6 py-3 flex items-center justify-between shadow-md">
+  <header class="bg-black text-white px-6 py-3 flex items-center justify-between shadow-md transition-colors duration-150">
     <div class="flex items-center gap-3">
-      <span class="text-2xl font-bold tracking-tight">
+      <a href="/" class="text-2xl font-bold tracking-tight">
         Younghyun&apos;s Blog
-      </span>
+      </a>
+      <button
+        type="button"
+        class="ml-4 text-xs border px-2 py-1 rounded border-gray-400 bg-gray-800 text-gray-100 hover:bg-gray-700 transition-all duration-150 flex items-center gap-1"
+        aria-label="Toggle dark/light mode"
+        onClick={toggleTheme}
+      >
+        <span class="inline-block transition-colors duration-150">{theme() === "dark" ? "🌙" : "☀️"}</span>
+        <span class="transition-colors duration-150">{theme() === "dark" ? "Dark" : "Light"}</span>
+      </button>
     </div>
     <Show
       when={isAuthenticated()}
@@ -40,7 +50,7 @@ const TopBar = () => (
           </span>
           <a
             href="/login"
-            class="bg-gray-900 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded transition-colors"
+            class="bg-gray-900 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded transition-colors duration-150"
           >
             Login
           </a>
@@ -74,9 +84,9 @@ const TopBar = () => (
             />
           </button>
           <Show when={menuOpen()}>
-            <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50">
+            <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-150">
               <button
-                class="w-full text-left px-4 py-2 hover:bg-gray-100 rounded flex items-center gap-2"
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 hover:dark:bg-gray-800 rounded flex items-center gap-2 transition-colors duration-150"
                 onClick={handleLogout}
               >
                 <svg
