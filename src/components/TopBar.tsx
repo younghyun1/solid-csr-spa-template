@@ -38,12 +38,12 @@ const TopBar = () => (
           <span class="relative">
             <span class="inline-block w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_2px_rgb(239,68,68,0.6)] mr-2" />
           </span>
-          <button
+          <a
+            href="/login"
             class="bg-gray-900 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded transition-colors"
-            onClick={() => (window.location.href = "/login")}
           >
             Login
-          </button>
+          </a>
         </div>
       }
     >
@@ -52,9 +52,7 @@ const TopBar = () => (
           <span class="inline-block w-3 h-3 rounded-full bg-green-400 shadow-[0_0_8px_2px_rgb(34,197,94,0.7)] mr-2" />
         </span>
         <div class="flex flex-col items-end mr-2 select-none">
-          <span class="font-medium">
-            {user()?.user_info.user_name}
-          </span>
+          <span class="font-medium">{user()?.user_info.user_name}</span>
           <span class="text-xs text-gray-300">
             {user()?.user_info.user_email}
           </span>
