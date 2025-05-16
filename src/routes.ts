@@ -13,6 +13,23 @@ export const routes: RouteDefinition[] = [
     component: lazy(() => import("./pages/about")),
   },
   {
+    path: "/blog",
+    children: [
+      {
+        path: "/",
+        component: lazy(() => import("./pages/posts/List")),
+      },
+      {
+        path: "/new",
+        component: lazy(() => import("./pages/posts/New")),
+      },
+      {
+        path: "/:post_id",
+        component: lazy(() => import("./pages/posts/View")),
+      }
+    ]
+  },
+  {
     path: "/login",
     component: lazy(() => import("./pages/login")),
   },

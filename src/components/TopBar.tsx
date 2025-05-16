@@ -1,7 +1,7 @@
 import { Show, createSignal, onCleanup } from "solid-js";
-import { isAuthenticated, user } from "../state/auth";
-import { logout } from "../services/auth/auth";
+import { isAuthenticated, user, setAuthenticated, setUser } from "../state/auth";
 import { theme, toggleTheme } from "../state/theme";
+import { authApi } from "../services/all_api";
 
 const [menuOpen, setMenuOpen] = createSignal(false);
 
@@ -21,7 +21,13 @@ const handleProfileClick = (e: MouseEvent) => {
 };
 
 const handleLogout = async () => {
-  await logout();
+  try {
+    await authApi.logout();
+  } catch (e) {
+    // Ignore error; in either case we void the state.
+  }
+  setAuthenticated(false);
+  setUser(null);
   setMenuOpen(false);
 };
 

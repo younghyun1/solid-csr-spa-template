@@ -1,15 +1,28 @@
 import { Suspense, type Component, onMount } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
-import TopBar from "./components/TopBar"; // <-- Add this line
-import { checkAuth } from "./services/auth/auth";
+import TopBar from "./components/TopBar";
 import { createEffect } from "solid-js";
 import { theme, applyTheme } from "./state/theme";
+import { authApi } from "./services/all_api";
+import { setAuthenticated, setUser } from "./state/auth";
 
 const App: Component = (props: { children: Element }) => {
   const location = useLocation();
 
-  onMount(() => {
-    checkAuth();
+  onMount(async () => {
+    try {
+      const resp = await authApi.me();
+      if (resp?.success && resp.data) {
+        setAuthenticated(true);
+        setUser(resp.data);
+      } else {
+        setAuthenticated(false);
+        setUser(null);
+      }
+    } catch (e) {
+      setAuthenticated(false);
+      setUser(null);
+    }
   });
   createEffect(() => {
     applyTheme(theme());
@@ -28,6 +41,11 @@ const App: Component = (props: { children: Element }) => {
           <li class="py-2 px-4">
             <A href="/about" class="no-underline hover:underline transition-colors duration-90">
               About
+            </A>
+          </li>
+          <li class="py-2 px-4">
+            <A href="/blog" class="no-underline hover:underline transition-colors duration-90">
+              Blog
             </A>
           </li>
 

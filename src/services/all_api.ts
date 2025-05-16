@@ -51,26 +51,26 @@ async function post<T = any>(
  * API Endpoints Grouped by Domain
  */
 export const healthApi = {
-  server: () => get("/api/healthcheck/server"),
-  state: () => get("/api/healthcheck/state"),
+  server: async () => await get("/api/healthcheck/server"),
+  state: async () => await get("/api/healthcheck/state"),
 };
 
 export const dropdownApi = {
-  languageList: () => get("/api/dropdown/language"),
-  language: (language_id: string | number) =>
-    get(`/api/dropdown/language/{language_id}`, { params: { language_id } }),
-  countryList: () => get("/api/dropdown/country"),
-  country: (country_id: string | number) =>
-    get("/api/dropdown/country/{country_id}", { params: { country_id } }),
-  countrySubdivisions: (country_id: string | number) =>
-    get("/api/dropdown/country/{country_id}/subdivision", {
+  languageList: async () => await get("/api/dropdown/language"),
+  language: async (language_id: string | number) =>
+    await get(`/api/dropdown/language/{language_id}`, { params: { language_id } }),
+  countryList: async () => await get("/api/dropdown/country"),
+  country: async (country_id: string | number) =>
+    await get("/api/dropdown/country/{country_id}", { params: { country_id } }),
+  countrySubdivisions: async (country_id: string | number) =>
+    await get("/api/dropdown/country/{country_id}/subdivision", {
       params: { country_id },
     }),
 };
 
 export const geoApi = {
-  lookupIp: (ip_address: string) =>
-    get("/api/geolocate/{ip_address}", { params: { ip_address } }),
+  lookupIp: async (ip_address: string) =>
+    await get("/api/geolocate/{ip_address}", { params: { ip_address } }),
 };
 
 import type {
@@ -93,25 +93,25 @@ import type {
 import type { ApiResponse } from "../dtos/shared/api_response";
 
 export const authApi = {
-  signup: (body: SignupRequest) =>
-    post<ApiResponse<SignupResponse>>("/api/auth/signup", { body }),
-  checkIfUserExists: (body: CheckIfUserExistsRequest) =>
-    post<ApiResponse<EmailValidateResponse>>("/api/auth/check-if-user-exists", { body }),
-  login: (body: LoginRequest) =>
-    post<ApiResponse<LoginResponse>>("/api/auth/login", { body }),
-  resetPasswordRequest: (body: ResetPasswordRequest) =>
-    post<ApiResponse<ResetPasswordRequestResponse>>("/api/auth/reset-password-request", { body }),
-  resetPassword: (body: ResetPasswordProcessRequest) =>
-    post<ApiResponse<ResetPasswordResponse>>("/api/auth/reset-password", { body }),
-  verifyUserEmail: (body: VerifyUserEmailRequest) =>
-    post<ApiResponse<EmailValidateResponse>>("/api/auth/verify-user-email", { body }),
-  me: () => get<ApiResponse<MeResponse>>("/api/auth/me"),
-  logout: () => post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
+  signup: async (body: SignupRequest) =>
+    await post<ApiResponse<SignupResponse>>("/api/auth/signup", { body }),
+  checkIfUserExists: async (body: CheckIfUserExistsRequest) =>
+    await post<ApiResponse<EmailValidateResponse>>("/api/auth/check-if-user-exists", { body }),
+  login: async (body: LoginRequest) =>
+    await post<ApiResponse<LoginResponse>>("/api/auth/login", { body }),
+  resetPasswordRequest: async (body: ResetPasswordRequest) =>
+    await post<ApiResponse<ResetPasswordRequestResponse>>("/api/auth/reset-password-request", { body }),
+  resetPassword: async (body: ResetPasswordProcessRequest) =>
+    await post<ApiResponse<ResetPasswordResponse>>("/api/auth/reset-password", { body }),
+  verifyUserEmail: async (body: VerifyUserEmailRequest) =>
+    await post<ApiResponse<EmailValidateResponse>>("/api/auth/verify-user-email", { body }),
+  me: async () => await get<ApiResponse<MeResponse>>("/api/auth/me"),
+  logout: async () => await post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
 };
 
 export const userApi = {
-  uploadProfilePicture: (body: FormData) =>
-    apiFetch("/api/user/upload-profile-picture", {
+  uploadProfilePicture: async (body: FormData) =>
+    await apiFetch("/api/user/upload-profile-picture", {
       method: "POST",
       body, // Do not stringify FormData
       credentials: "include",
@@ -138,29 +138,36 @@ import type {
 } from "../dtos/responses/blog";
 
 export const blogApi = {
-  getPosts: (query?: GetPostsRequest) =>
-    get<ApiResponse<GetPostsResponse>>("/api/blog/posts", {
+  getPosts: async (query?: GetPostsRequest) =>
+    await get<ApiResponse<GetPostsResponse>>("/api/blog/posts", {
       params: query,
     }),
-  readPost: (post_id: string) =>
-    get<ApiResponse<ReadPostResponse>>("/api/blog/posts/{post_id}", { params: { post_id } }),
-  submitPost: (body: SubmitPostRequest) =>
-    post<ApiResponse<SubmitPostResponse>>("/api/blog/posts", { body }),
+  readPost: async (post_id: string) =>
+    await get<ApiResponse<ReadPostResponse>>("/api/blog/posts/{post_id}", { params: { post_id } }),
+  submitPost: async (body: SubmitPostRequest) =>
+    await post<ApiResponse<SubmitPostResponse>>("/api/blog/posts", { body }),
+  // Add voting and commenting endpoints
+  upvotePost: async (body: UpvotePostRequest) =>
+    await post<ApiResponse<VotePostResponse>>("/api/blog/upvote-post", { body }),
+  upvoteComment: async (body: UpvoteCommentRequest) =>
+    await post<ApiResponse<VoteCommentResponse>>("/api/blog/upvote-comment", { body }),
+  submitComment: async (body: SubmitCommentRequest) =>
+    await post<ApiResponse<Comment>>("/api/blog/submit-comment", { body }),
 };
 
 import type { GetCountryLanguageBundleRequest } from "../dtos/requests/i18n";
 import type { GetCountryLanguageBundleResponse } from "../dtos/responses/i18n";
 
 export const i18nApi = {
-  getCountryLanguageBundle: (query?: GetCountryLanguageBundleRequest) =>
-    get<ApiResponse<GetCountryLanguageBundleResponse>>("/api/i18n/country-language-bundle", { params: query }),
+  getCountryLanguageBundle: async (query?: GetCountryLanguageBundleRequest) =>
+    await get<ApiResponse<GetCountryLanguageBundleResponse>>("/api/i18n/country-language-bundle", { params: query }),
 };
 
 import type { SyncI18nCacheResponse } from "../dtos/responses/admin";
 
 export const adminApi = {
-  syncCountryLanguageBundle: () =>
-    get<ApiResponse<SyncI18nCacheResponse>>("/api/admin/sync-country-language-bundle"),
+  syncCountryLanguageBundle: async () =>
+    await get<ApiResponse<SyncI18nCacheResponse>>("/api/admin/sync-country-language-bundle"),
 };
 
 export { get, post, interpolate };
