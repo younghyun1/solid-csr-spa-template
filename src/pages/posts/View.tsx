@@ -119,7 +119,6 @@ export default function PostViewPage() {
                 <span>
                   {new Date(data().post.post_created_at).toLocaleString()}
                 </span>
-                <span class="ml-3">Tags: {data().post.post_tags.join(", ")}</span>
               </div>
               <div class="prose dark:prose-invert max-w-none mb-3"
                 innerHTML={data().post.post_content}
