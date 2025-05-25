@@ -6,6 +6,30 @@ import { theme, applyTheme } from "./state/theme";
 import { authApi } from "./services/all_api";
 import { setAuthenticated, setUser } from "./state/auth";
 
+// Expose build info injected by Vite
+declare const __BUILD_TIMESTAMP__: string;
+declare const __SOLID_VERSION__: string;
+
+const BuildInfoOverlay = () => (
+  <div
+    style={{
+      position: "fixed",
+      left: 0,
+      bottom: 0,
+      background: "rgba(30,30,30,0.88)",
+      color: "#fff",
+      "font-size": "0.85em",
+      padding: "6px 14px 7px 12px",
+      "border-top-right-radius": "8px",
+      "z-index": 9999,
+      "font-family": "monospace",
+      "pointer-events": "none",
+    }}
+  >
+    FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
+  </div>
+);
+
 const App: Component = (props: { children: Element }) => {
   const location = useLocation();
 
@@ -31,20 +55,30 @@ const App: Component = (props: { children: Element }) => {
   return (
     <>
       <TopBar />
+      <BuildInfoOverlay />
       <nav class="bg-white text-gray-900 px-4 transition-colors duration-90 dark:bg-gray-900 dark:text-gray-100">
         <ul class="flex items-center">
           <li class="py-2 px-4">
-            <A href="/" class="no-underline hover:underline transition-colors duration-90">
+            <A
+              href="/"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
               Home
             </A>
           </li>
           <li class="py-2 px-4">
-            <A href="/about" class="no-underline hover:underline transition-colors duration-90">
+            <A
+              href="/about"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
               About
             </A>
           </li>
           <li class="py-2 px-4">
-            <A href="/blog" class="no-underline hover:underline transition-colors duration-90">
+            <A
+              href="/blog"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
               Blog
             </A>
           </li>
