@@ -7,6 +7,7 @@ export default defineConfig({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
     __SOLID_VERSION__: JSON.stringify(pkg.dependencies["solid-js"] || ""),
+    __APP_NAME__: JSON.stringify(pkg.name),
   },
   server: {
     port: 3000,

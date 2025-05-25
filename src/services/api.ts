@@ -5,10 +5,13 @@ export function apiUrl(path: string) {
   return `${API_URL}${path}`;
 }
 
-// Generic fetch wrapper that includes the API key header
+// Expose Vite-injected globals for build info headers
+declare const __BUILD_TIMESTAMP__: string;
+declare const __APP_NAME__: string;
+
 import { setAuthenticated, setUser } from "../state/auth";
 
-// Unified error-handling apiFetch
+// Unified error-handling apiFetch, with client build info headers
 export async function apiFetch(path: string, options: RequestInit = {}) {
   options.headers = {
     ...(options.headers || {}),
