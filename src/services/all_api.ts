@@ -164,9 +164,10 @@ export const blogApi = {
   submitPost: async (body: SubmitPostRequest) =>
     await post<ApiResponse<SubmitPostResponse>>("/api/blog/posts", { body }),
   // Add voting and commenting endpoints
-  votePost: async (body: UpvotePostRequest) =>
+  votePost: async (body: UpvotePostRequest, post_id: string) =>
     await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
       body,
+      params: { post_id },
     }),
   voteComment: async (
     body: UpvoteCommentRequest,

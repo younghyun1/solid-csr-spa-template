@@ -24,11 +24,10 @@ export default function PostViewPage() {
   const handleVotePost = async (is_upvote: boolean) => {
     if (!postId()) return;
     try {
-      await blogApi.votePost({
-        is_upvote,
-        // For the new API, post_id is now in the path, not the body.
-        // If your API expects post_id only as a path param, remove it from body.
-      });
+      await blogApi.votePost(
+        { is_upvote },
+        postId()
+      );
       refetch();
     } catch (_) {
       // Optionally handle error
