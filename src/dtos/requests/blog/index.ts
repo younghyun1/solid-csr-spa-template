@@ -25,11 +25,10 @@ export interface SubmitPostRequest {
 }
 
 export interface UpvoteCommentRequest {
-  comment_id: string; // UUID
   is_upvote: boolean;
 }
 
 export interface UpvotePostRequest {
-  post_id: string; // UUID
   is_upvote: boolean;
 }
+

@@ -58,7 +58,9 @@ export const healthApi = {
 export const dropdownApi = {
   languageList: async () => await get("/api/dropdown/language"),
   language: async (language_id: string | number) =>
-    await get(`/api/dropdown/language/{language_id}`, { params: { language_id } }),
+    await get(`/api/dropdown/language/{language_id}`, {
+      params: { language_id },
+    }),
   countryList: async () => await get("/api/dropdown/country"),
   country: async (country_id: string | number) =>
     await get("/api/dropdown/country/{country_id}", { params: { country_id } }),
@@ -96,17 +98,29 @@ export const authApi = {
   signup: async (body: SignupRequest) =>
     await post<ApiResponse<SignupResponse>>("/api/auth/signup", { body }),
   checkIfUserExists: async (body: CheckIfUserExistsRequest) =>
-    await post<ApiResponse<EmailValidateResponse>>("/api/auth/check-if-user-exists", { body }),
+    await post<ApiResponse<EmailValidateResponse>>(
+      "/api/auth/check-if-user-exists",
+      { body },
+    ),
   login: async (body: LoginRequest) =>
     await post<ApiResponse<LoginResponse>>("/api/auth/login", { body }),
   resetPasswordRequest: async (body: ResetPasswordRequest) =>
-    await post<ApiResponse<ResetPasswordRequestResponse>>("/api/auth/reset-password-request", { body }),
+    await post<ApiResponse<ResetPasswordRequestResponse>>(
+      "/api/auth/reset-password-request",
+      { body },
+    ),
   resetPassword: async (body: ResetPasswordProcessRequest) =>
-    await post<ApiResponse<ResetPasswordResponse>>("/api/auth/reset-password", { body }),
+    await post<ApiResponse<ResetPasswordResponse>>("/api/auth/reset-password", {
+      body,
+    }),
   verifyUserEmail: async (body: VerifyUserEmailRequest) =>
-    await post<ApiResponse<EmailValidateResponse>>("/api/auth/verify-user-email", { body }),
+    await post<ApiResponse<EmailValidateResponse>>(
+      "/api/auth/verify-user-email",
+      { body },
+    ),
   me: async () => await get<ApiResponse<MeResponse>>("/api/auth/me"),
-  logout: async () => await post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
+  logout: async () =>
+    await post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
 };
 
 export const userApi = {
@@ -143,14 +157,30 @@ export const blogApi = {
       params: query,
     }),
   readPost: async (post_id: string) =>
-    await get<ApiResponse<ReadPostResponse>>("/api/blog/posts/{post_id}", { params: { post_id } }),
+    await get<ApiResponse<ReadPostResponse>>("/api/blog/posts/{post_id}", {
+      params: { post_id },
+    }),
   submitPost: async (body: SubmitPostRequest) =>
     await post<ApiResponse<SubmitPostResponse>>("/api/blog/posts", { body }),
   // Add voting and commenting endpoints
-  upvotePost: async (body: UpvotePostRequest) =>
-    await post<ApiResponse<VotePostResponse>>("/api/blog/upvote-post", { body }),
-  upvoteComment: async (body: UpvoteCommentRequest) =>
-    await post<ApiResponse<VoteCommentResponse>>("/api/blog/upvote-comment", { body }),
+  votePost: async (body: UpvotePostRequest) =>
+    await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
+      body,
+    }),
+  voteComment: async (body: UpvoteCommentRequest, post_id: string, comment_id: string) =>
+    await post<ApiResponse<VoteCommentResponse>>(
+      "/api/blog/{post_id}/{comment_id}/vote",
+      { body, params: { post_id, comment_id } },
+    ),
+  rescindPostVote: async (post_id: string) =>
+    await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
+      params: { post_id },
+    }),
+  rescindCommentVote: async (post_id: string, comment_id: string) =>
+    await post<ApiResponse<VoteCommentResponse>>(
+      "/api/blog/{post_id}/{comment_id}/vote",
+      { params: { post_id, comment_id } },
+    ),
   submitComment: async (body: SubmitCommentRequest) =>
     await post<ApiResponse<Comment>>("/api/blog/submit-comment", { body }),
 };
@@ -160,14 +190,19 @@ import type { GetCountryLanguageBundleResponse } from "../dtos/responses/i18n";
 
 export const i18nApi = {
   getCountryLanguageBundle: async (query?: GetCountryLanguageBundleRequest) =>
-    await get<ApiResponse<GetCountryLanguageBundleResponse>>("/api/i18n/country-language-bundle", { params: query }),
+    await get<ApiResponse<GetCountryLanguageBundleResponse>>(
+      "/api/i18n/country-language-bundle",
+      { params: query },
+    ),
 };
 
 import type { SyncI18nCacheResponse } from "../dtos/responses/admin";
 
 export const adminApi = {
   syncCountryLanguageBundle: async () =>
-    await get<ApiResponse<SyncI18nCacheResponse>>("/api/admin/sync-country-language-bundle"),
+    await get<ApiResponse<SyncI18nCacheResponse>>(
+      "/api/admin/sync-country-language-bundle",
+    ),
 };
 
 export { get, post, interpolate };
