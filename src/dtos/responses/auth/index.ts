@@ -33,8 +33,10 @@ export interface UserProfilePicture {
 }
 
 export interface MeResponse {
-  user_info: UserInfo;
+  user_info: UserInfo | null;
   user_profile_picture: UserProfilePicture | null;
+  build_time: string;
+  axum_version: string;
 }
 
 export interface ResetPasswordRequestResponse {
