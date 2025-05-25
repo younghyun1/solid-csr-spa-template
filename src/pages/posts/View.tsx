@@ -40,7 +40,6 @@ export default function PostViewPage() {
         downvote_count: resp.data.downvote_count,
         is_upvote: resp.data.is_upvote,
       });
-      refetch();
     } catch (_) {
       // Optionally handle error
     }
@@ -225,9 +224,10 @@ export default function PostViewPage() {
             <>
               <div class="mb-4 flex flex-row items-start gap-4">
                 {/* Vote vertical bar */}
-                <div class="flex-col items-center pr-2 select-none">
+                <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
                   <button
-                    class={`text-2xl transition px-1 ${(optimisticPostVote()
+                    class={`text-2xl transition ${
+                      (optimisticPostVote()
                         ? optimisticPostVote()!.is_upvote === true
                           ? "text-green-500 font-bold"
                           : "text-gray-400 hover:text-green-500"
@@ -235,21 +235,21 @@ export default function PostViewPage() {
                           ? "text-green-500 font-bold"
                           : "text-gray-400 hover:text-green-500"
                       )
-                      }`}
+                    }`}
                     aria-label="Upvote"
                     onClick={() => handleVotePost(true)}
                     title="Upvote Post"
                   >
                     ▲
                   </button>
-                  <span class="text-base font-semibold text-center min-w-[2ch]">
+                  <span class="text-base font-semibold text-center min-w-[2ch] my-1">
                     {typeof optimisticPostVote()?.upvote_count === "number"
                       ? optimisticPostVote()!.upvote_count
                       : typeof data().post?.total_upvotes === "number"
                         ? data().post.total_upvotes
                         : 0}
                   </span>
-                  <span class="text-base font-semibold text-center min-w-[2ch] text-red-500">
+                  <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-red-500">
                     {typeof optimisticPostVote()?.downvote_count === "number"
                       ? optimisticPostVote()!.downvote_count > 0
                         ? "-" + optimisticPostVote()!.downvote_count
@@ -261,7 +261,8 @@ export default function PostViewPage() {
                         : 0}
                   </span>
                   <button
-                    class={`text-2xl transition px-1 ${(optimisticPostVote()
+                    class={`text-2xl transition ${
+                      (optimisticPostVote()
                         ? optimisticPostVote()!.is_upvote === false
                           ? "text-red-500 font-bold"
                           : "text-gray-400 hover:text-red-500"
@@ -269,7 +270,7 @@ export default function PostViewPage() {
                           ? "text-red-500 font-bold"
                           : "text-gray-400 hover:text-red-500"
                       )
-                      }`}
+                    }`}
                     aria-label="Downvote"
                     onClick={() => handleVotePost(false)}
                     title="Downvote Post"
