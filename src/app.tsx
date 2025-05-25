@@ -14,6 +14,7 @@ declare const __SOLID_VERSION__: string;
 export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
   built_time?: string;
   name?: string;
+  rust_version?: string;
 }>({});
 
 const BuildInfoOverlay = () => {
@@ -39,7 +40,12 @@ const BuildInfoOverlay = () => {
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
       <br />
-      BE: built {serverBuildInfo().built_time ?? "…"} ({serverBuildInfo().name ?? "…"})
+      BE: built {serverBuildInfo().built_time ?? "…"} ({serverBuildInfo().name ?? "…"}) 
+      {serverBuildInfo().rust_version && (
+        <>
+          {" "}rust {serverBuildInfo().rust_version}
+        </>
+      )}
     </div>
   );
 };

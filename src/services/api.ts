@@ -23,11 +23,13 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   // Update server build info from headers, if present
   const builtTime = response.headers.get("x-server-built-time");
   const serverName = response.headers.get("x-server-name");
-  if (builtTime || serverName) {
+  const rustVersion = response.headers.get("x-server-rust-version");
+  if (builtTime || serverName || rustVersion) {
     setServerBuildInfo((prev) => ({
       ...prev,
       built_time: builtTime ?? prev.built_time,
       name: serverName ?? prev.name,
+      rust_version: rustVersion ?? prev.rust_version,
     }));
   }
 
