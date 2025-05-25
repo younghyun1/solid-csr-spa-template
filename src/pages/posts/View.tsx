@@ -21,13 +21,25 @@ export default function PostViewPage() {
     return res?.data;
   });
 
+  // Optimistic vote state for instant UI update
+  const [optimisticPostVote, setOptimisticPostVote] = createSignal<{
+    upvote_count: number;
+    downvote_count: number;
+    is_upvote: boolean;
+  } | null>(null);
+
   const handleVotePost = async (is_upvote: boolean) => {
     if (!postId()) return;
     try {
-      await blogApi.votePost(
+      const resp = await blogApi.votePost(
         { is_upvote },
         postId()
       );
+      setOptimisticPostVote({
+        upvote_count: resp.data.upvote_count,
+        downvote_count: resp.data.downvote_count,
+        is_upvote: resp.data.is_upvote,
+      });
       refetch();
     } catch (_) {
       // Optionally handle error
@@ -198,86 +210,120 @@ export default function PostViewPage() {
         </div>
       </Show>
       <Show when={postResource()}>
-        {(data) => (
-          <>
-            <div class="mb-4 flex flex-row items-start gap-4">
-              {/* Vote vertical bar */}
-              <div class="flex flex-col items-center pr-2 select-none">
-                <button
-                  class={`text-2xl transition px-1 ${data().vote_state === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
-                  aria-label="Upvote"
-                  onClick={() => handleVotePost(true)}
-                  title="Upvote Post"
-                >
-                  ▲
-                </button>
-                <span class="text-base font-semibold text-center min-w-[2ch]">
-                  {typeof data().post?.total_upvotes === "number"
-                    ? data().post.total_upvotes
-                    : 0}
-                </span>
-                <span class="text-base font-semibold text-center min-w-[2ch] text-red-500">
-                  {typeof data().post?.total_downvotes === "number"
-                    ? data().post.total_downvotes > 0
-                      ? "-" + data().post.total_downvotes
-                      : 0
-                    : 0}
-                </span>
-                <button
-                  class={`text-2xl transition px-1 ${data().vote_state === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
-                  aria-label="Downvote"
-                  onClick={() => handleVotePost(false)}
-                  title="Downvote Post"
-                >
-                  ▼
-                </button>
-              </div>
-
-              {/* Post content */}
-              <div class="flex-1">
-                <h1 class="text-3xl font-bold mb-2">
-                  {data().post.post_title}
-                </h1>
-                <div class="flex items-center text-sm text-gray-400 mb-2">
-                  <span>
-                    {new Date(data().post.post_created_at).toLocaleString()}
+        {(data) => {
+          // Reset optimistic state when a new post is loaded/refreshed
+          if (
+            optimisticPostVote() &&
+            (
+              typeof data().post?.total_upvotes === "number" &&
+              optimisticPostVote()!.upvote_count !== data().post.total_upvotes
+            )
+          ) {
+            setOptimisticPostVote(null);
+          }
+          return (
+            <>
+              <div class="mb-4 flex flex-row items-start gap-4">
+                {/* Vote vertical bar */}
+                <div class="flex-col items-center pr-2 select-none">
+                  <button
+                    class={`text-2xl transition px-1 ${(optimisticPostVote()
+                        ? optimisticPostVote()!.is_upvote === true
+                          ? "text-green-500 font-bold"
+                          : "text-gray-400 hover:text-green-500"
+                        : data().vote_state === 0
+                          ? "text-green-500 font-bold"
+                          : "text-gray-400 hover:text-green-500"
+                      )
+                      }`}
+                    aria-label="Upvote"
+                    onClick={() => handleVotePost(true)}
+                    title="Upvote Post"
+                  >
+                    ▲
+                  </button>
+                  <span class="text-base font-semibold text-center min-w-[2ch]">
+                    {typeof optimisticPostVote()?.upvote_count === "number"
+                      ? optimisticPostVote()!.upvote_count
+                      : typeof data().post?.total_upvotes === "number"
+                        ? data().post.total_upvotes
+                        : 0}
                   </span>
+                  <span class="text-base font-semibold text-center min-w-[2ch] text-red-500">
+                    {typeof optimisticPostVote()?.downvote_count === "number"
+                      ? optimisticPostVote()!.downvote_count > 0
+                        ? "-" + optimisticPostVote()!.downvote_count
+                        : 0
+                      : typeof data().post?.total_downvotes === "number"
+                        ? data().post.total_downvotes > 0
+                          ? "-" + data().post.total_downvotes
+                          : 0
+                        : 0}
+                  </span>
+                  <button
+                    class={`text-2xl transition px-1 ${(optimisticPostVote()
+                        ? optimisticPostVote()!.is_upvote === false
+                          ? "text-red-500 font-bold"
+                          : "text-gray-400 hover:text-red-500"
+                        : data().vote_state === 1
+                          ? "text-red-500 font-bold"
+                          : "text-gray-400 hover:text-red-500"
+                      )
+                      }`}
+                    aria-label="Downvote"
+                    onClick={() => handleVotePost(false)}
+                    title="Downvote Post"
+                  >
+                    ▼
+                  </button>
                 </div>
-                <div
-                  class="prose dark:prose-invert max-w-none mb-3"
-                  innerHTML={data().post.post_content}
-                />
+
+                {/* Post content */}
+                <div class="flex-1">
+                  <h1 class="text-3xl font-bold mb-2">
+                    {data().post.post_title}
+                  </h1>
+                  <div class="flex items-center text-sm text-gray-400 mb-2">
+                    <span>
+                      {new Date(data().post.post_created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div
+                    class="prose dark:prose-invert max-w-none mb-3"
+                    innerHTML={data().post.post_content}
+                  />
+                </div>
               </div>
-            </div>
-            <hr class="my-5" />
-            <section>
-              <h2 class="text-xl font-semibold mb-3">Comments</h2>
-              {renderComments(buildCommentTree(data().comments || []))}
-            </section>
-            <hr class="my-5" />
-            <section>
-              <h3 class="text-lg font-semibold mb-2">Add Comment</h3>
-              <form onSubmit={handleSubmitComment} class="flex flex-col gap-2">
-                <textarea
-                  class="w-full min-h-[120px] border border-gray-300 dark:border-gray-700 rounded p-2"
-                  value={commentValue()}
-                  onInput={(e) => setCommentValue(e.currentTarget.value)}
-                  placeholder="Write a comment (plaintext)..."
-                />
-                <Show when={commentError()}>
-                  <span class="text-red-600">{commentError()}</span>
-                </Show>
-                <button
-                  class="self-end bg-blue-600 text-white px-4 py-2 rounded font-semibold disabled:opacity-60 transition"
-                  type="submit"
-                  disabled={commentLoading() || !commentValue().trim()}
-                >
-                  {commentLoading() ? "Posting..." : "Post Comment"}
-                </button>
-              </form>
-            </section>
-          </>
-        )}
+              <hr class="my-5" />
+              <section>
+                <h2 class="text-xl font-semibold mb-3">Comments</h2>
+                {renderComments(buildCommentTree(data().comments || []))}
+              </section>
+              <hr class="my-5" />
+              <section>
+                <h3 class="text-lg font-semibold mb-2">Add Comment</h3>
+                <form onSubmit={handleSubmitComment} class="flex flex-col gap-2">
+                  <textarea
+                    class="w-full min-h-[120px] border border-gray-300 dark:border-gray-700 rounded p-2"
+                    value={commentValue()}
+                    onInput={(e) => setCommentValue(e.currentTarget.value)}
+                    placeholder="Write a comment (plaintext)..."
+                  />
+                  <Show when={commentError()}>
+                    <span class="text-red-600">{commentError()}</span>
+                  </Show>
+                  <button
+                    class="self-end bg-blue-600 text-white px-4 py-2 rounded font-semibold disabled:opacity-60 transition"
+                    type="submit"
+                    disabled={commentLoading() || !commentValue().trim()}
+                  >
+                    {commentLoading() ? "Posting..." : "Post Comment"}
+                  </button>
+                </form>
+              </section>
+            </>
+          )
+        }}
       </Show>
     </main>
   );
