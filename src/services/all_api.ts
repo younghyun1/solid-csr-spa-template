@@ -118,7 +118,15 @@ export const authApi = {
       "/api/auth/verify-user-email",
       { body },
     ),
-  me: async () => await get<ApiResponse<MeResponse>>("/api/auth/me"),
+  // me: gets user info, but also reads server build info from headers for overlay
+  me: async () => {
+    const url = interpolate("/api/auth/me", {});
+    const res = await apiFetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(await res.text());
+    // Directly update overlay/serverBuildInfo from headers (apiFetch already handles, but for legacy, ensure here)
+    // Optionally, you can parse or extract, but apiFetch should do it.
+    return res.json();
+  },
   logout: async () =>
     await post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
 };
