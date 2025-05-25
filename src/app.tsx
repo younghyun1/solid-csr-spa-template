@@ -1,4 +1,4 @@
-import { Suspense, type Component, onMount } from "solid-js";
+import { Suspense, type Component, onMount, createSignal } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import TopBar from "./components/TopBar";
 import { createEffect } from "solid-js";
@@ -9,6 +9,12 @@ import { setAuthenticated, setUser } from "./state/auth";
 // Expose build info injected by Vite
 declare const __BUILD_TIMESTAMP__: string;
 declare const __SOLID_VERSION__: string;
+
+// Define the backend build info signal outside App to allow reference in the overlay
+const [backendBuildInfo, setBackendBuildInfo] = createSignal<{
+  build_time?: string;
+  axum_version?: string;
+}>({});
 
 const BuildInfoOverlay = () => (
   <div
@@ -27,6 +33,8 @@ const BuildInfoOverlay = () => (
     }}
   >
     FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
+    <br />
+    BE: built {backendBuildInfo().build_time ?? "…"} w. axum {backendBuildInfo().axum_version ?? "…"}
   </div>
 );
 
@@ -39,13 +47,21 @@ const App: Component = (props: { children: Element }) => {
       if (resp?.success && resp.data) {
         setAuthenticated(true);
         setUser(resp.data);
+
+        // Save backend build info from response
+        setBackendBuildInfo({
+          build_time: resp.data.build_time,
+          axum_version: resp.data.axum_version,
+        });
       } else {
         setAuthenticated(false);
         setUser(null);
+        setBackendBuildInfo({});
       }
     } catch (e) {
       setAuthenticated(false);
       setUser(null);
+      setBackendBuildInfo({});
     }
   });
   createEffect(() => {
