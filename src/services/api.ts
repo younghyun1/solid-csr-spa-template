@@ -10,6 +10,7 @@ declare const __BUILD_TIMESTAMP__: string;
 declare const __APP_NAME__: string;
 
 import { setAuthenticated, setUser } from "../state/auth";
+import { setServerBuildInfo } from "../app";
 
 // Unified error-handling apiFetch, with client build info headers
 export async function apiFetch(path: string, options: RequestInit = {}) {
@@ -18,6 +19,17 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     "x-api-key": API_KEY,
   };
   const response = await fetch(apiUrl(path), options);
+
+  // Update server build info from headers, if present
+  const builtTime = response.headers.get("x-server-built-time");
+  const serverName = response.headers.get("x-server-name");
+  if (builtTime || serverName) {
+    setServerBuildInfo((prev) => ({
+      ...prev,
+      built_time: builtTime ?? prev.built_time,
+      name: serverName ?? prev.name,
+    }));
+  }
 
   if (response.status === 401 || response.status === 403) {
     setAuthenticated(false);

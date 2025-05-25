@@ -10,10 +10,10 @@ import { setAuthenticated, setUser } from "./state/auth";
 declare const __BUILD_TIMESTAMP__: string;
 declare const __SOLID_VERSION__: string;
 
-// Define the backend build info signal outside App to allow reference in the overlay
-const [backendBuildInfo, setBackendBuildInfo] = createSignal<{
-  build_time?: string;
-  axum_version?: string;
+// Server build info (live from response headers)
+export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
+  built_time?: string;
+  name?: string;
 }>({});
 
 const BuildInfoOverlay = () => {
@@ -39,7 +39,7 @@ const BuildInfoOverlay = () => {
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
       <br />
-      BE: built {backendBuildInfo().build_time ?? "…"} w. {backendBuildInfo().axum_version ?? "…"}
+      BE: built {serverBuildInfo().built_time ?? "…"} ({serverBuildInfo().name ?? "…"})
     </div>
   );
 };
@@ -55,19 +55,19 @@ const App: Component = (props: { children: Element }) => {
         setUser(resp.data);
 
         // Save backend build info from response
-        setBackendBuildInfo({
-          build_time: resp.data.build_time,
-          axum_version: resp.data.axum_version,
+        setServerBuildInfo({
+          built_time: resp.data.build_time,
+          name: resp.data.axum_version,
         });
       } else {
         setAuthenticated(false);
         setUser(null);
-        setBackendBuildInfo({});
+        setServerBuildInfo({});
       }
     } catch (e) {
       setAuthenticated(false);
       setUser(null);
-      setBackendBuildInfo({});
+      setServerBuildInfo({});
     }
   });
   createEffect(() => {
