@@ -39,7 +39,7 @@ const BuildInfoOverlay = () => {
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
       <br />
-      BE: built {backendBuildInfo().build_time ?? "…"} w. axum {backendBuildInfo().axum_version ?? "…"}
+      BE: built {backendBuildInfo().build_time ?? "…"} w. {backendBuildInfo().axum_version ?? "…"}
     </div>
   );
 };

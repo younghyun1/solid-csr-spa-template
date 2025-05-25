@@ -6,10 +6,25 @@ export function apiUrl(path: string) {
 }
 
 // Generic fetch wrapper that includes the API key header
+import { setAuthenticated, setUser } from "../state/auth";
+
+// Unified error-handling apiFetch
 export async function apiFetch(path: string, options: RequestInit = {}) {
   options.headers = {
     ...(options.headers || {}),
     "x-api-key": API_KEY,
   };
-  return fetch(apiUrl(path), options);
+  const response = await fetch(apiUrl(path), options);
+
+  if (response.status === 401 || response.status === 403) {
+    setAuthenticated(false);
+    setUser(null);
+    // Use hard redirect for full reset (safe from anywhere), fallback if already on /login
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized – redirected to login");
+  }
+
+  return response;
 }
