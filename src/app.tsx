@@ -43,7 +43,7 @@ const BuildInfoOverlay = () => {
       BE: built {serverBuildInfo().built_time ?? "…"} ({serverBuildInfo().name ?? "…"}) 
       {serverBuildInfo().rust_version && (
         <>
-          {" "}rust {serverBuildInfo().rust_version}
+          {" "}rust/{serverBuildInfo().rust_version}
         </>
       )}
     </div>
