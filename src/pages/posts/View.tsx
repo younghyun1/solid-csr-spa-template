@@ -37,11 +37,7 @@ export default function PostViewPage() {
 
   const handleVoteComment = async (comment_id: string, is_upvote: boolean) => {
     try {
-      await blogApi.voteComment(
-        { is_upvote },
-        postId(),
-        comment_id
-      );
+      await blogApi.voteComment({ is_upvote }, postId(), comment_id);
       refetch();
     } catch (_) {
       // Optionally handle error
@@ -53,14 +49,16 @@ export default function PostViewPage() {
     setCommentLoading(true);
     setCommentError(null);
     try {
-      await blogApi.submitComment({
-        is_guest: !isAuthenticated(),
-        guest_id: null,
-        guest_password: null,
-        post_id: postId(),
-        parent_comment_id: null,
-        comment_content: commentValue(),
-      });
+      await blogApi.submitComment(
+        {
+          is_guest: !isAuthenticated(),
+          guest_id: null,
+          guest_password: null,
+          parent_comment_id: null,
+          comment_content: commentValue(),
+        },
+        postId(),
+      );
       setCommentValue("");
       refetch();
     } catch (err: any) {
@@ -70,65 +68,74 @@ export default function PostViewPage() {
     }
   };
 
-// Convert flat comment array to hierarchy for parent-child rendering
-function buildCommentTree(flatComments: any[]): any[] {
-  const commentsById: Record<string, any> = {};
-  const roots: any[] = [];
-  
-  for (const c of flatComments) {
-    commentsById[c.comment_id] = { ...c, children: [] };
-  }
-  for (const c of flatComments) {
-    if (c.parent_comment_id && commentsById[c.parent_comment_id]) {
-      commentsById[c.parent_comment_id].children.push(commentsById[c.comment_id]);
-    } else {
-      roots.push(commentsById[c.comment_id]);
-    }
-  }
-  return roots;
-}
+  // Convert flat comment array to hierarchy for parent-child rendering
+  function buildCommentTree(flatComments: any[]): any[] {
+    const commentsById: Record<string, any> = {};
+    const roots: any[] = [];
 
-function renderComments(comments: any[], depth = 0) {
-  return (
-    <For each={comments}>
-      {(comment) => (
-        <div
-          class={`mt-3 p-3 rounded bg-gray-50 dark:bg-gray-800`}
-          style={{ "margin-left": `${depth * 24}px` }}
-        >
-          <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
-            <span class="font-bold">{comment.user_id ?? "Guest"}</span>
-            <span class="ml-3 text-xs">
-              {new Date(comment.comment_created_at).toLocaleString()}
-            </span>
-          </div>
-          <div class="prose prose-sm dark:prose-invert" innerHTML={comment.comment_content} />
-          <div class="flex items-center gap-2 mt-2 mb-1">
-            {/* Horizontal voting bar: Up arrow | Up count | Down count | Down arrow */}
-            <button
-              class={`text-lg px-1 ${comment.vote_state === 1 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
-              onClick={() => handleVoteComment(comment.comment_id, true)}
-              title="Upvote"
-            >
-              ▲
-            </button>
-            <span class="text-sm text-green-700 dark:text-green-400">{comment.total_upvotes ?? 0}</span>
-            <span class="text-sm text-red-500">
-              {comment.total_downvotes > 0 ? "-" + comment.total_downvotes : 0}
-            </span>
-            <button
-              class={`text-lg px-1 ${comment.vote_state === 2 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
-              onClick={() => handleVoteComment(comment.comment_id, false)}
-              title="Downvote"
-            >
-              ▼
-            </button>
-            {/* <button class="ml-3 text-xs text-blue-500 hover:underline" onClick={() => setReplyTo(comment.comment_id)}>
+    for (const c of flatComments) {
+      commentsById[c.comment_id] = { ...c, children: [] };
+    }
+    for (const c of flatComments) {
+      if (c.parent_comment_id && commentsById[c.parent_comment_id]) {
+        commentsById[c.parent_comment_id].children.push(
+          commentsById[c.comment_id],
+        );
+      } else {
+        roots.push(commentsById[c.comment_id]);
+      }
+    }
+    return roots;
+  }
+
+  function renderComments(comments: any[], depth = 0) {
+    return (
+      <For each={comments}>
+        {(comment) => (
+          <div
+            class={`mt-3 p-3 rounded bg-gray-50 dark:bg-gray-800`}
+            style={{ "margin-left": `${depth * 24}px` }}
+          >
+            <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
+              <span class="font-bold">{comment.user_id ?? "Guest"}</span>
+              <span class="ml-3 text-xs">
+                {new Date(comment.comment_created_at).toLocaleString()}
+              </span>
+            </div>
+            <div
+              class="prose prose-sm dark:prose-invert"
+              innerHTML={comment.comment_content}
+            />
+            <div class="flex items-center gap-2 mt-2 mb-1">
+              {/* Horizontal voting bar: Up arrow | Up count | Down count | Down arrow */}
+              <button
+                class={`text-lg px-1 ${comment.vote_state === 1 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                onClick={() => handleVoteComment(comment.comment_id, true)}
+                title="Upvote"
+              >
+                ▲
+              </button>
+              <span class="text-sm text-green-700 dark:text-green-400">
+                {comment.total_upvotes ?? 0}
+              </span>
+              <span class="text-sm text-red-500">
+                {comment.total_downvotes > 0
+                  ? "-" + comment.total_downvotes
+                  : 0}
+              </span>
+              <button
+                class={`text-lg px-1 ${comment.vote_state === 2 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                onClick={() => handleVoteComment(comment.comment_id, false)}
+                title="Downvote"
+              >
+                ▼
+              </button>
+              {/* <button class="ml-3 text-xs text-blue-500 hover:underline" onClick={() => setReplyTo(comment.comment_id)}>
               Reply
             </button> */}
-          </div>
-          {/* Reply editor: Uncomment to enable replying to individual comments */}
-          {/* {replyTo() === comment.comment_id && (
+            </div>
+            {/* Reply editor: Uncomment to enable replying to individual comments */}
+            {/* {replyTo() === comment.comment_id && (
             <form
               class="flex flex-col gap-2 mt-1"
               onSubmit={async (e) => {
@@ -172,12 +179,14 @@ function renderComments(comments: any[], depth = 0) {
               </button>
             </form>
           )} */}
-          {comment.children && comment.children.length > 0 && renderComments(comment.children, depth + 1)}
-        </div>
-      )}
-    </For>
-  );
-}
+            {comment.children &&
+              comment.children.length > 0 &&
+              renderComments(comment.children, depth + 1)}
+          </div>
+        )}
+      </For>
+    );
+  }
 
   return (
     <main class="max-w-2xl mx-auto py-8">
@@ -253,7 +262,7 @@ function renderComments(comments: any[], depth = 0) {
                 <textarea
                   class="w-full min-h-[120px] border border-gray-300 dark:border-gray-700 rounded p-2"
                   value={commentValue()}
-                  onInput={e => setCommentValue(e.currentTarget.value)}
+                  onInput={(e) => setCommentValue(e.currentTarget.value)}
                   placeholder="Write a comment (plaintext)..."
                 />
                 <Show when={commentError()}>

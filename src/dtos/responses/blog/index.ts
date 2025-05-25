@@ -59,11 +59,11 @@ export interface Post {
   post_metadata: any;
   total_upvotes: number;
   total_downvotes: number;
-  
+
   // add more as needed matching backend
 }
 
-export interface Comment {
+export interface SubmitCommentResponse {
   comment_id: string;
   post_id: string;
   user_id: string;

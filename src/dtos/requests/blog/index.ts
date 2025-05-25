@@ -11,7 +11,6 @@ export interface SubmitCommentRequest {
   is_guest: boolean;
   guest_id: string | null;
   guest_password: string | null;
-  post_id: string; // UUID
   parent_comment_id: string | null;
   comment_content: string;
 }
@@ -31,4 +30,3 @@ export interface UpvoteCommentRequest {
 export interface UpvotePostRequest {
   is_upvote: boolean;
 }
-

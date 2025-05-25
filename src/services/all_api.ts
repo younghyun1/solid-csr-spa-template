@@ -146,6 +146,7 @@ import type {
 import type {
   GetPostsResponse,
   ReadPostResponse,
+  SubmitCommentResponse,
   SubmitPostResponse,
   VoteCommentResponse,
   VotePostResponse,
@@ -167,7 +168,11 @@ export const blogApi = {
     await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
       body,
     }),
-  voteComment: async (body: UpvoteCommentRequest, post_id: string, comment_id: string) =>
+  voteComment: async (
+    body: UpvoteCommentRequest,
+    post_id: string,
+    comment_id: string,
+  ) =>
     await post<ApiResponse<VoteCommentResponse>>(
       "/api/blog/{post_id}/{comment_id}/vote",
       { body, params: { post_id, comment_id } },
@@ -181,8 +186,11 @@ export const blogApi = {
       "/api/blog/{post_id}/{comment_id}/vote",
       { params: { post_id, comment_id } },
     ),
-  submitComment: async (body: SubmitCommentRequest) =>
-    await post<ApiResponse<Comment>>("/api/blog/submit-comment", { body }),
+  submitComment: async (body: SubmitCommentRequest, post_id: string) =>
+    await post<ApiResponse<SubmitCommentResponse>>(
+      "/api/blog/{post_id}/comment",
+      { body, params: { post_id } },
+    ),
 };
 
 import type { GetCountryLanguageBundleRequest } from "../dtos/requests/i18n";
