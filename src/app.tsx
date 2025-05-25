@@ -2,7 +2,7 @@ import { Suspense, type Component, onMount, createSignal } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import TopBar from "./components/TopBar";
 import { createEffect } from "solid-js";
-import { theme, applyTheme } from "./state/theme";
+import { theme, applyTheme } from "./state/theme"; // <-- import theme for dynamic color
 import { authApi } from "./services/all_api";
 import { setAuthenticated, setUser } from "./state/auth";
 
@@ -16,27 +16,33 @@ const [backendBuildInfo, setBackendBuildInfo] = createSignal<{
   axum_version?: string;
 }>({});
 
-const BuildInfoOverlay = () => (
-  <div
-    style={{
-      position: "fixed",
-      left: 0,
-      bottom: 0,
-      background: "rgba(30,30,30,0.88)",
-      color: "#fff",
-      "font-size": "0.85em",
-      padding: "6px 14px 7px 12px",
-      "border-top-right-radius": "8px",
-      "z-index": 9999,
-      "font-family": "monospace",
-      "pointer-events": "none",
-    }}
-  >
-    FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
-    <br />
-    BE: built {backendBuildInfo().build_time ?? "…"} w. axum {backendBuildInfo().axum_version ?? "…"}
-  </div>
-);
+const BuildInfoOverlay = () => {
+  // Choose light/dark mode text color
+  const textColor = theme() === "dark" ? "#ededed" : "#18181b";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: 0,
+        bottom: 0,
+        background: "none", // remove box color
+        color: textColor,
+        "font-size": "0.85em",
+        padding: "6px 14px 7px 12px",
+        "border-top-right-radius": "8px",
+        "z-index": 9999,
+        "font-family": "monospace",
+        "pointer-events": "none",
+        // no border or shadow
+      }}
+    >
+      FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
+      <br />
+      BE: built {backendBuildInfo().build_time ?? "…"} w. axum {backendBuildInfo().axum_version ?? "…"}
+    </div>
+  );
+};
 
 const App: Component = (props: { children: Element }) => {
   const location = useLocation();
