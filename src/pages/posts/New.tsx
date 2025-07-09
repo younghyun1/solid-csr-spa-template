@@ -29,7 +29,7 @@ export default function NewPostPage() {
         post_is_published: true,
       });
       if (res.success) {
-        navigate(`/posts/${res.data.post_id}`, { replace: true });
+        navigate(`/blog/${res.data.post_id}`, { replace: true });
       } else {
         setError("Failed to publish post.");
       }
