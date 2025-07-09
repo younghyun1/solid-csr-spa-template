@@ -30,6 +30,10 @@ export const routes: RouteDefinition[] = [
     ],
   },
   {
+    path: "/visitor-board",
+    component: lazy(() => import("./pages/visitor_board")),
+  },
+  {
     path: "/login",
     component: lazy(() => import("./pages/login")),
   },

@@ -1,5 +1,10 @@
-import { Show, createSignal, onCleanup } from "solid-js";
-import { isAuthenticated, user, setAuthenticated, setUser } from "../state/auth";
+import { Show, createSignal, onCleanup, JSX } from "solid-js";
+import {
+  isAuthenticated,
+  user,
+  setAuthenticated,
+  setUser,
+} from "../state/auth";
 import { theme, toggleTheme } from "../state/theme";
 import { authApi } from "../services/all_api";
 
@@ -31,26 +36,42 @@ const handleLogout = async () => {
   setMenuOpen(false);
 };
 
-const TopBar = () => (
+interface TopBarProps {
+  children?: JSX.Element;
+}
+
+const TopBar = (props: TopBarProps) => (
   <header class="bg-white text-gray-900 dark:bg-black dark:text-white px-6 py-3 flex items-center justify-between shadow-md transition-colors duration-90">
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-6">
       <a href="/" class="text-2xl font-bold tracking-tight">
         Younghyun&apos;s Blog
       </a>
-      <button
-        type="button"
-        class="ml-4 text-xs border px-2 py-1 rounded border-gray-300 dark:border-gray-400 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-90 flex items-center gap-1"
-        aria-label="Toggle dark/light mode"
-        onClick={toggleTheme}
-      >
-        <span class="inline-block transition-colors duration-90">{theme() === "dark" ? "🌙" : "☀️"}</span>
-        <span class="transition-colors duration-90">{theme() === "dark" ? "Dark" : "Light"}</span>
-      </button>
+      <nav>
+        <ul class="flex items-center">{props.children}</ul>
+      </nav>
     </div>
     <Show
       when={isAuthenticated()}
       fallback={
         <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="text-xs border px-2 py-1 rounded border-gray-300 dark:border-gray-400 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-90 flex items-center gap-1"
+            aria-label="Toggle dark/light mode"
+            onClick={toggleTheme}
+            style={{
+              width: "70px",
+              'min-width': "70px",
+              'justify-content': "center",
+            }}
+          >
+            <span class="inline-block transition-colors duration-90">
+              {theme() === "dark" ? "🌙" : "☀️"}
+            </span>
+            <span class="transition-colors duration-90 sr-only">
+              {theme() === "dark" ? "Dark" : "Light"}
+            </span>
+          </button>
           <span class="relative">
             <span class="inline-block w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_2px_rgb(239,68,68,0.6)] mr-2" />
           </span>
@@ -64,6 +85,20 @@ const TopBar = () => (
       }
     >
       <div class="flex items-center gap-4">
+        <button
+          type="button"
+          class="text-xs border px-2 py-1 rounded border-gray-300 dark:border-gray-400 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-90 flex items-center gap-1"
+          aria-label="Toggle dark/light mode"
+          onClick={toggleTheme}
+          style={{ width: "70px", 'min-width': "70px", 'justify-content': "center" }}
+        >
+          <span class="inline-block transition-colors duration-90">
+            {theme() === "dark" ? "🌙" : "☀️"}
+          </span>
+          <span class="transition-colors duration-90 sr-only">
+            {theme() === "dark" ? "Dark" : "Light"}
+          </span>
+        </button>
         <span class="relative flex items-center">
           <span class="inline-block w-3 h-3 rounded-full bg-green-400 shadow-[0_0_8px_2px_rgb(34,197,94,0.7)] mr-2" />
         </span>

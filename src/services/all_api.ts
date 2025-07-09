@@ -222,6 +222,10 @@ export const adminApi = {
     ),
 };
 
+export const visitorBoardApi = {
+  getVisitorBoard: async () => await get("/api/visitor-board"),
+};
+
 export { get, post, interpolate };
 
 /**

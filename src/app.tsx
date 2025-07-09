@@ -40,11 +40,10 @@ const BuildInfoOverlay = () => {
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
       <br />
-      BE: built {serverBuildInfo().built_time ?? "…"} ({serverBuildInfo().name ?? "…"}) 
+      BE: built {serverBuildInfo().built_time ?? "…"} (
+      {serverBuildInfo().name ?? "…"})
       {serverBuildInfo().rust_version && (
-        <>
-          {" "}rust/{serverBuildInfo().rust_version}
-        </>
+        <> rust/{serverBuildInfo().rust_version}</>
       )}
     </div>
   );
@@ -81,52 +80,53 @@ const App: Component = (props: { children: Element }) => {
   });
 
   return (
-    <>
-      <TopBar />
+    <div
+      id="app-root"
+      style="display: flex; flex-direction: column; min-height: 100vh;"
+    >
+      <TopBar>
+        <li class="py-2 px-4">
+          <A
+            href="/"
+            class="no-underline hover:underline transition-colors duration-90"
+          >
+            Home
+          </A>
+        </li>
+        <li class="py-2 px-4">
+          <A
+            href="/about"
+            class="no-underline hover:underline transition-colors duration-90"
+          >
+            About
+          </A>
+        </li>
+        <li class="py-2 px-4">
+          <A
+            href="/blog"
+            class="no-underline hover:underline transition-colors duration-90"
+          >
+            Blog
+          </A>
+        </li>
+        <li class="py-2 px-4">
+          <A
+            href="/visitor-board"
+            class="no-underline hover:underline transition-colors duration-90"
+          >
+            Visitor Board
+          </A>
+        </li>
+      </TopBar>
       <BuildInfoOverlay />
-      <nav class="bg-white text-gray-900 px-4 transition-colors duration-90 dark:bg-gray-900 dark:text-gray-100">
-        <ul class="flex items-center">
-          <li class="py-2 px-4">
-            <A
-              href="/"
-              class="no-underline hover:underline transition-colors duration-90"
-            >
-              Home
-            </A>
-          </li>
-          <li class="py-2 px-4">
-            <A
-              href="/about"
-              class="no-underline hover:underline transition-colors duration-90"
-            >
-              About
-            </A>
-          </li>
-          <li class="py-2 px-4">
-            <A
-              href="/blog"
-              class="no-underline hover:underline transition-colors duration-90"
-            >
-              Blog
-            </A>
-          </li>
 
-          <li class="text-sm flex items-center space-x-1 ml-auto">
-            <span>URL:</span>
-            <input
-              class="w-75px p-1 bg-white text-sm rounded-lg dark:bg-gray-800 dark:text-white transition-colors duration-90"
-              type="text"
-              readOnly
-              value={location.pathname}
-            />
-          </li>
-        </ul>
-      </nav>
-
-      <main class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen">
+      <main
+        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100"
+        style="flex: 1 1 0%; min-height: 0;"
+      >
         <Suspense>{props.children}</Suspense>
       </main>
-    </>
+    </div>
   );
 };
 
