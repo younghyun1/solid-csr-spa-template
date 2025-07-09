@@ -136,30 +136,61 @@ function SignupPage() {
             <select
               value={userCountry() ?? ""}
               onInput={(e) => setUserCountry(Number(e.currentTarget.value))}
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
               required
+              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option value="">Select Country...</option>
-              {countries().map((country) => (
-                <option
-                  value={country.country_id}
-                  selected={userCountry() == country.country_id}
-                >
-                  {country.country_name}
-                </option>
-              ))}
+              <option
+                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
+                style={{ color: "inherit", "background-color": "inherit" }}
+                value=""
+              >
+                Select Country...
+              </option>
+              {countries().map((country) => {
+                // Try to get Unicode regional country code flag
+                // country.country_code might be the 2-letter code
+                let flag = "";
+                if (country.country_code && country.country_code.length === 2) {
+                  flag = country.country_code
+                    .toUpperCase()
+                    .replace(/./g, (char) =>
+                      String.fromCodePoint(127397 + char.charCodeAt(0)),
+                    );
+                }
+                return (
+                  <option
+                    value={country.country_id}
+                    selected={userCountry() == country.country_id}
+                    class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
+                    style={{ color: "inherit", "background-color": "inherit" }}
+                  >
+                    {flag ? `${flag} ` : ""}
+                    {country.country_name}
+                  </option>
+                );
+              })}
             </select>
             <select
               value={userLanguage() ?? ""}
               onInput={(e) => setUserLanguage(Number(e.currentTarget.value))}
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
               required
+              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option value="">Select Language...</option>
+              <option
+                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
+                style={{ color: "inherit", "background-color": "inherit" }}
+                value=""
+              >
+                Select Language...
+              </option>
               {languages().map((lang) => (
                 <option
                   value={lang.language_id}
                   selected={userLanguage() == lang.language_id}
+                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
+                  style={{ color: "inherit", "background-color": "inherit" }}
                 >
                   {lang.language_name}
                 </option>
@@ -174,14 +205,23 @@ function SignupPage() {
                     : Number(e.currentTarget.value),
                 )
               }
-              class="w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              class="w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
               disabled={!subdivisions().length}
+              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option value="">No Subdivision / Not Applicable</option>
+              <option
+                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
+                style={{ color: "inherit", "background-color": "inherit" }}
+                value=""
+              >
+                No Subdivision / Not Applicable
+              </option>
               {subdivisions().map((sub) => (
                 <option
                   value={sub.subdivision_id}
                   selected={userSubdivision() == sub.subdivision_id}
+                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
+                  style={{ color: "inherit", "background-color": "inherit" }}
                 >
                   {sub.subdivision_name}
                 </option>
