@@ -175,31 +175,36 @@ function SignupPage() {
                 )
               }
               class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
+              style="color: inherit; background-color: inherit;"
               required
             >
               <option value="">Select Language...</option>
               {(() => {
-                // Bubble up the current country's primary language
-                let allLangs = languages() ?? [];
-                let primaryLangId = (() => {
-                  const country = countries().find(
-                    (c) => c.country_code === Number(userCountry()),
-                  );
-                  return country?.country_primary_language;
-                })();
-                let sortedLangs = [...allLangs];
-                if (primaryLangId) {
-                  // Put primary language(s) at the top, without duplicates
-                  sortedLangs.sort((a, b) => {
-                    if (a.language_id === primaryLangId) return -1;
-                    if (b.language_id === primaryLangId) return 1;
-                    return 0;
-                  });
+                const allLangs = languages() ?? [];
+                const country = countries().find(
+                  (c) => Number(c.country_code) === Number(userCountry()),
+                );
+                const primaryLangId = Number(country?.country_primary_language);
+                let withPrimaryFirst = allLangs;
+                if (
+                  primaryLangId &&
+                  allLangs.some(
+                    (lang) => Number(lang.language_id) === primaryLangId,
+                  )
+                ) {
+                  withPrimaryFirst = [
+                    ...allLangs.filter(
+                      (lang) => Number(lang.language_id) === primaryLangId,
+                    ),
+                    ...allLangs.filter(
+                      (lang) => Number(lang.language_id) !== primaryLangId,
+                    ),
+                  ];
                 }
-                return sortedLangs.map((lang) => (
+                return withPrimaryFirst.map((lang) => (
                   <option
                     value={lang.language_id}
-                    selected={userLanguage() == lang.language_id?.toString()}
+                    selected={userLanguage() === String(lang.language_id)}
                     class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
                   >
                     {lang.language_name ?? lang.language_eng_name}
