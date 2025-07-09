@@ -78,7 +78,7 @@ export default function VisitorBoard() {
         // Add all markers with a large red downwards arrow in popup
         markers = pairs.map((pair) => {
           const [[lat, lng], count] = pair;
-          let popupHtml = `<span style="color: red; font-size: 1.5em; vertical-align: middle;">⬇️</span> Visitors from here: <b>${count}</b>`;
+          let popupHtml = `Visitors from here: <b>${count}</b>`;
           return L.marker([lat, lng]).addTo(map!).bindPopup(popupHtml);
         });
 
