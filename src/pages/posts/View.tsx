@@ -119,8 +119,8 @@ export default function PostViewPage() {
             ids.commentId!,
           );
       }
-      // Success, refetch to sync with server truth
-      refetch();
+      // Success! The optimistic update is already showing.
+      // refetch(); // <-- REMOVED for smoother UX
     } catch (error) {
       // On error, revert the optimistic update by refetching
       console.error("Vote failed:", error);
@@ -191,7 +191,7 @@ export default function PostViewPage() {
               style={{ "margin-left": `${depth * 24}px` }}
             >
               <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
-                <span class="font-bold">{comment.user_name ?? "Guest"}</span>
+                <span class="font-bold">{comment.user_id ?? "Guest"}</span>
                 <span class="ml-3 text-xs">
                   {new Date(comment.comment_created_at).toLocaleString()}
                 </span>
