@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* NEW: Add EasyMDE Dark Theme Styles */
+.easymde-dark .CodeMirror {
+    background: #1a202c; /* gray-900 */
+    color: #e2e8f0; /* gray-300 */
+}
+.easymde-dark .editor-toolbar {
+    border-color: #4a5568; /* gray-700 */
+}
+.easymde-dark .editor-toolbar > a {
+    color: #e2e8f0; /* gray-300 */
+}
+.easymde-dark .editor-toolbar > a.active,
+.easymde-dark .editor-toolbar > a:hover {
+    background: #2d3748; /* gray-800 */
+    border-color: #4a5568; /* gray-700 */
+}
+.easymde-dark .CodeMirror-cursor {
+    border-left-color: #e2e8f0; /* gray-300 */
+}

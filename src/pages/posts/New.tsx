@@ -50,14 +50,14 @@ export default function NewPostPage() {
           value={title()}
           onInput={(e) => setTitle(e.currentTarget.value)}
           required
-          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700"
+          class="px-3 py-2 rounded border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
         />
         <input
           type="text"
           placeholder="Tags (comma separated)"
           value={tags()}
           onInput={(e) => setTags(e.currentTarget.value)}
-          class="px-3 py-2 rounded border border-gray-300 dark:border-gray-700"
+          class="px-3 py-2 rounded border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
         />
         <div>
           <label class="font-medium text-gray-700 dark:text-gray-200 mb-2 block">
@@ -65,9 +65,7 @@ export default function NewPostPage() {
           </label>
           <MarkdownEditor value={body()} onChange={setBody} />
         </div>
-        {error() && (
-          <div class="text-red-600">{error()}</div>
-        )}
+        {error() && <div class="text-red-600">{error()}</div>}
         <button
           type="submit"
           disabled={isSubmitting()}

@@ -2,8 +2,13 @@ import { Show, createSignal, createResource, For } from "solid-js";
 import { createStore } from "solid-js/store";
 import { useParams } from "@solidjs/router";
 import { blogApi } from "../../services/all_api";
-// import MarkdownEditor from "../../components/MarkdownEditor";
 import { isAuthenticated } from "../../state/auth";
+
+// VoteState Mapping based on Rust Enum:
+// 0: Upvoted
+// 1: Downvoted
+// 2: DidNotVote
+type VoteState = 0 | 1 | 2;
 
 export default function PostViewPage() {
   const params = useParams();
@@ -11,10 +16,6 @@ export default function PostViewPage() {
   const [commentValue, setCommentValue] = createSignal("");
   const [commentLoading, setCommentLoading] = createSignal(false);
   const [commentError, setCommentError] = createSignal<string | null>(null);
-  const [replyTo, setReplyTo] = createSignal<string | null>(null);
-  const [replyValue, setReplyValue] = createSignal("");
-  const [replyLoadingId, setReplyLoadingId] = createSignal<string | null>(null);
-  const [replyError, setReplyError] = createSignal<string | null>(null);
 
   const [postResource, { refetch }] = createResource(postId, async (pid) => {
     if (!pid) return null;
@@ -22,115 +23,108 @@ export default function PostViewPage() {
     return res?.data;
   });
 
-  // Optimistic vote state for instant UI update
-  const [optimisticPostVote, setOptimisticPostVote] = createSignal<{
-    upvote_count: number;
-    downvote_count: number;
-    is_upvote: boolean;
-  } | null>(null);
-
-  const handleVotePost = async (is_upvote: boolean) => {
-    if (!postId()) return;
-    try {
-      const resp = await blogApi.votePost({ is_upvote }, postId());
-      setOptimisticPostVote({
-        upvote_count: resp.data.upvote_count,
-        downvote_count: resp.data.downvote_count,
-        is_upvote: resp.data.is_upvote,
-      });
-    } catch (_) {
-      // Optionally handle error
-    }
-  };
-
-  // NEW: Store for optimistic comment vote states
-  const [optimisticCommentVotes, setOptimisticCommentVotes] = createStore<
-    Record<
+  // Store for optimistic vote states (Post + Comments)
+  const [optimisticVotes, setOptimisticVotes] = createStore<{
+    post?: {
+      total_upvotes: number;
+      total_downvotes: number;
+      vote_state: VoteState;
+    };
+    comments: Record<
       string,
       {
         total_upvotes: number;
         total_downvotes: number;
-        vote_state: 1 | 2 | null;
+        vote_state: VoteState;
       }
-    >
-  >({});
+    >;
+  }>({ comments: {} });
 
-  // Optimistic comment voting
-  const handleVoteComment = async (comment: any, is_upvote: boolean) => {
-    const comment_id = comment.comment_id;
-    const currentVoteState = (() => {
-      // Prefer optimistic state if present, fallback to original
-      if (
-        optimisticCommentVotes[comment_id] !== undefined &&
-        optimisticCommentVotes[comment_id].vote_state !== undefined
-      ) {
-        return optimisticCommentVotes[comment_id].vote_state;
-      }
-      return comment.vote_state;
-    })();
+  const handleVote = async (
+    type: "post" | "comment",
+    isUpvote: boolean,
+    ids: { postId: string; commentId?: string },
+  ) => {
+    const originalPostState = postResource()?.post;
+    const originalCommentState =
+      type === "comment" && ids.commentId
+        ? postResource()?.comments.find((c) => c.comment_id === ids.commentId)
+        : undefined;
+
+    if (type === "post" && !originalPostState) return;
+    if (type === "comment" && !originalCommentState) return;
+
+    // Determine current state from optimistic store or initial data
+    const currentState =
+      type === "post"
+        ? (optimisticVotes.post?.vote_state ?? postResource()?.vote_state)
+        : (optimisticVotes.comments[ids.commentId!]?.vote_state ??
+          originalCommentState?.vote_state);
+
     const currentUpvotes =
-      optimisticCommentVotes[comment_id]?.total_upvotes ??
-      comment.total_upvotes ??
-      0;
+      (type === "post"
+        ? (optimisticVotes.post?.total_upvotes ??
+          originalPostState?.total_upvotes)
+        : (optimisticVotes.comments[ids.commentId!]?.total_upvotes ??
+          originalCommentState?.total_upvotes)) || 0;
     const currentDownvotes =
-      optimisticCommentVotes[comment_id]?.total_downvotes ??
-      comment.total_downvotes ??
-      0;
+      (type === "post"
+        ? (optimisticVotes.post?.total_downvotes ??
+          originalPostState?.total_downvotes)
+        : (optimisticVotes.comments[ids.commentId!]?.total_downvotes ??
+          originalCommentState?.total_downvotes)) || 0;
 
-    // Optimistically update the UI
-    setOptimisticCommentVotes(comment_id, (prev) => {
-      let newUpvotes = currentUpvotes;
-      let newDownvotes = currentDownvotes;
-      let newVoteState: 1 | 2 | null = is_upvote ? 1 : 2;
+    const isRescinding =
+      (isUpvote && currentState === 0) || (!isUpvote && currentState === 1);
 
-      if (is_upvote) {
-        if (currentVoteState === 1) {
-          // Un-upvoting
-          newUpvotes--;
-          newVoteState = null;
-        } else {
-          newUpvotes++;
-          if (currentVoteState === 2) newDownvotes--; // Was downvoted before
-        }
-      } else {
-        // Downvoting
-        if (currentVoteState === 2) {
-          // Un-downvoting
-          newDownvotes--;
-          newVoteState = null;
-        } else {
-          newDownvotes++;
-          if (currentVoteState === 1) newUpvotes--; // Was upvoted before
-        }
-      }
+    // --- Optimistic Update ---
+    let newVoteState: VoteState = isUpvote ? 0 : 1;
+    let newUpvotes = currentUpvotes;
+    let newDownvotes = currentDownvotes;
 
-      return {
-        total_upvotes: newUpvotes,
-        total_downvotes: newDownvotes,
-        vote_state: newVoteState,
-      };
-    });
+    if (isRescinding) {
+      newVoteState = 2; // DidNotVote
+      if (isUpvote) newUpvotes--;
+      else newDownvotes--;
+    } else {
+      if (currentState === 0) newUpvotes--; // changing from upvote
+      if (currentState === 1) newDownvotes--; // changing from downvote
+      if (isUpvote) newUpvotes++;
+      else newDownvotes++;
+    }
 
+    const optimisticUpdate = {
+      total_upvotes: newUpvotes,
+      total_downvotes: newDownvotes,
+      vote_state: newVoteState,
+    };
+    if (type === "post") {
+      setOptimisticVotes("post", optimisticUpdate);
+    } else {
+      setOptimisticVotes("comments", ids.commentId!, optimisticUpdate);
+    }
+
+    // --- API Call ---
     try {
-      const resp = await blogApi.voteComment(
-        { is_upvote },
-        postId(),
-        comment_id,
-      );
-      setOptimisticCommentVotes(comment_id, {
-        total_upvotes: resp.data.upvote_count,
-        total_downvotes: resp.data.downvote_count,
-        vote_state:
-          resp.data.is_upvote === null ? null : resp.data.is_upvote ? 1 : 2,
-      });
-      // No full refetch here
-    } catch (_) {
-      // On error, revert the optimistic update
-      setOptimisticCommentVotes(comment_id, {
-        total_upvotes: currentUpvotes,
-        total_downvotes: currentDownvotes,
-        vote_state: currentVoteState,
-      });
+      if (isRescinding) {
+        if (type === "post") await blogApi.rescindPostVote(ids.postId);
+        else await blogApi.rescindCommentVote(ids.postId, ids.commentId!);
+      } else {
+        if (type === "post")
+          await blogApi.votePost({ is_upvote: isUpvote }, ids.postId);
+        else
+          await blogApi.voteComment(
+            { is_upvote: isUpvote },
+            ids.postId,
+            ids.commentId!,
+          );
+      }
+      // Success, refetch to sync with server truth
+      refetch();
+    } catch (error) {
+      // On error, revert the optimistic update by refetching
+      console.error("Vote failed:", error);
+      refetch();
     }
   };
 
@@ -158,7 +152,6 @@ export default function PostViewPage() {
     }
   };
 
-  // Convert flat comment array to hierarchy for parent-child rendering
   function buildCommentTree(flatComments: any[]): any[] {
     const commentsById: Record<string, any> = {};
     const roots: any[] = [];
@@ -182,9 +175,15 @@ export default function PostViewPage() {
     return (
       <For each={comments}>
         {(comment) => {
-          // Get the optimistic state for this specific comment
-          const optimisticState = () =>
-            optimisticCommentVotes[comment.comment_id];
+          const voteState = () =>
+            optimisticVotes.comments[comment.comment_id]?.vote_state ??
+            comment.vote_state;
+          const upvotes = () =>
+            optimisticVotes.comments[comment.comment_id]?.total_upvotes ??
+            comment.total_upvotes;
+          const downvotes = () =>
+            optimisticVotes.comments[comment.comment_id]?.total_downvotes ??
+            comment.total_downvotes;
 
           return (
             <div
@@ -192,101 +191,46 @@ export default function PostViewPage() {
               style={{ "margin-left": `${depth * 24}px` }}
             >
               <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
-                <span class="font-bold">{comment.user_id ?? "Guest"}</span>
+                <span class="font-bold">{comment.user_name ?? "Guest"}</span>
                 <span class="ml-3 text-xs">
                   {new Date(comment.comment_created_at).toLocaleString()}
                 </span>
               </div>
-              <div
-                class="prose prose-sm dark:prose-invert"
-                innerHTML={comment.comment_content}
-              />
+              <div class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                {comment.comment_content}
+              </div>
               <div class="flex items-center gap-2 mt-2 mb-1">
-                {/* Horizontal voting bar: Up arrow | Up count | Down count | Down arrow */}
                 <button
-                  class={`text-lg px-1 ${
-                    (optimisticState()?.vote_state ?? comment.vote_state) === 1
-                      ? "text-green-500 font-bold"
-                      : "text-gray-400 hover:text-green-500"
-                  }`}
-                  onClick={() => handleVoteComment(comment, true)}
+                  class={`text-lg px-1 ${voteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                  onClick={() =>
+                    handleVote("comment", true, {
+                      postId: postId(),
+                      commentId: comment.comment_id,
+                    })
+                  }
                   title="Upvote"
                 >
                   ▲
                 </button>
                 <span class="text-sm text-green-700 dark:text-green-400">
-                  {optimisticState()?.total_upvotes ??
-                    comment.total_upvotes ??
-                    0}
+                  {upvotes()}
                 </span>
                 <span class="text-sm text-red-500">
-                  {(optimisticState()?.total_downvotes ??
-                    comment.total_downvotes) > 0
-                    ? "-" +
-                      (optimisticState()?.total_downvotes ??
-                        comment.total_downvotes)
-                    : 0}
+                  {downvotes() > 0 ? `-${downvotes()}` : 0}
                 </span>
                 <button
-                  class={`text-lg px-1 ${
-                    (optimisticState()?.vote_state ?? comment.vote_state) === 2
-                      ? "text-red-500 font-bold"
-                      : "text-gray-400 hover:text-red-500"
-                  }`}
-                  onClick={() => handleVoteComment(comment, false)}
+                  class={`text-lg px-1 ${voteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                  onClick={() =>
+                    handleVote("comment", false, {
+                      postId: postId(),
+                      commentId: comment.comment_id,
+                    })
+                  }
                   title="Downvote"
                 >
                   ▼
                 </button>
-                {/* <button class="ml-3 text-xs text-blue-500 hover:underline" onClick={() => setReplyTo(comment.comment_id)}>
-                Reply
-              </button> */}
               </div>
-              {/* Reply editor: Uncomment to enable replying to individual comments */}
-              {/* {replyTo() === comment.comment_id && (
-              <form
-                class="flex flex-col gap-2 mt-1"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  setReplyLoadingId(comment.comment_id);
-                  setReplyError(null);
-                  try {
-                    await blogApi.submitComment({
-                      is_guest: !isAuthenticated(),
-                      guest_id: null,
-                      guest_password: null,
-                      post_id: postId(),
-                      parent_comment_id: comment.comment_id,
-                      comment_content: replyValue(),
-                    });
-                    setReplyTo(null);
-                    setReplyValue("");
-                    refetch();
-                  } catch (err: any) {
-                    setReplyError(err?.message ?? "Failed to submit reply");
-                  } finally {
-                    setReplyLoadingId(null);
-                  }
-                }}
-              >
-                <textarea
-                  class="w-full min-h-[60px] border border-gray-300 dark:border-gray-700 rounded p-2"
-                  value={replyValue()}
-                  onInput={(e) => setReplyValue(e.currentTarget.value)}
-                  placeholder="Write a reply..."
-                />
-                <Show when={replyError()}>
-                  <span class="text-red-600">{replyError()}</span>
-                </Show>
-                <button
-                  class="self-end bg-blue-600 text-white px-3 py-1 rounded font-semibold disabled:opacity-60 transition"
-                  type="submit"
-                  disabled={replyLoadingId() === comment.comment_id || !replyValue().trim()}
-                >
-                  {replyLoadingId() === comment.comment_id ? "Posting..." : "Reply"}
-                </button>
-              </form>
-            )} */}
               {comment.children &&
                 comment.children.length > 0 &&
                 renderComments(comment.children, depth + 1)}
@@ -309,72 +253,43 @@ export default function PostViewPage() {
       </Show>
       <Show when={postResource()}>
         {(data) => {
-          // Reset optimistic state when a new post is loaded/refreshed
-          if (
-            optimisticPostVote() &&
-            typeof data().post?.total_upvotes === "number" &&
-            optimisticPostVote()!.upvote_count !== data().post.total_upvotes
-          ) {
-            setOptimisticPostVote(null);
-          }
+          const postVoteState = () =>
+            optimisticVotes.post?.vote_state ?? data().vote_state;
+          const postUpvotes = () =>
+            optimisticVotes.post?.total_upvotes ?? data().post.total_upvotes;
+          const postDownvotes = () =>
+            optimisticVotes.post?.total_downvotes ??
+            data().post.total_downvotes;
+
           return (
             <>
               <div class="mb-4 flex flex-row items-start gap-4">
-                {/* Vote vertical bar */}
                 <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
                   <button
-                    class={`text-2xl transition ${
-                      optimisticPostVote()
-                        ? optimisticPostVote()!.is_upvote === true
-                          ? "text-green-500 font-bold"
-                          : "text-gray-400 hover:text-green-500"
-                        : data().vote_state === 0
-                          ? "text-green-500 font-bold"
-                          : "text-gray-400 hover:text-green-500"
-                    }`}
+                    class={`text-2xl transition ${postVoteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                    onClick={() =>
+                      handleVote("post", true, { postId: data().post.post_id })
+                    }
                     aria-label="Upvote"
-                    onClick={() => handleVotePost(true)}
-                    title="Upvote Post"
                   >
                     ▲
                   </button>
                   <span class="text-base font-semibold text-center min-w-[2ch] my-1">
-                    {typeof optimisticPostVote()?.upvote_count === "number"
-                      ? optimisticPostVote()!.upvote_count
-                      : typeof data().post?.total_upvotes === "number"
-                        ? data().post.total_upvotes
-                        : 0}
+                    {postUpvotes()}
                   </span>
                   <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-red-500">
-                    {typeof optimisticPostVote()?.downvote_count === "number"
-                      ? optimisticPostVote()!.downvote_count > 0
-                        ? "-" + optimisticPostVote()!.downvote_count
-                        : 0
-                      : typeof data().post?.total_downvotes === "number"
-                        ? data().post.total_downvotes > 0
-                          ? "-" + data().post.total_downvotes
-                          : 0
-                        : 0}
+                    {postDownvotes() > 0 ? `-${postDownvotes()}` : 0}
                   </span>
                   <button
-                    class={`text-2xl transition ${
-                      optimisticPostVote()
-                        ? optimisticPostVote()!.is_upvote === false
-                          ? "text-red-500 font-bold"
-                          : "text-gray-400 hover:text-red-500"
-                        : data().vote_state === 1
-                          ? "text-red-500 font-bold"
-                          : "text-gray-400 hover:text-red-500"
-                    }`}
+                    class={`text-2xl transition ${postVoteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                    onClick={() =>
+                      handleVote("post", false, { postId: data().post.post_id })
+                    }
                     aria-label="Downvote"
-                    onClick={() => handleVotePost(false)}
-                    title="Downvote Post"
                   >
                     ▼
                   </button>
                 </div>
-
-                {/* Post content */}
                 <div class="flex-1">
                   <h1 class="text-3xl font-bold mb-2">
                     {data().post.post_title}
@@ -403,7 +318,7 @@ export default function PostViewPage() {
                   class="flex flex-col gap-2"
                 >
                   <textarea
-                    class="w-full min-h-[120px] border border-gray-300 dark:border-gray-700 rounded p-2"
+                    class="w-full min-h-[120px] border rounded p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                     value={commentValue()}
                     onInput={(e) => setCommentValue(e.currentTarget.value)}
                     placeholder="Write a comment (plaintext)..."

@@ -3,9 +3,22 @@ export interface GetPostsResponse {
   available_pages: number;
 }
 
+export interface CommentResponse {
+  comment_id: string; // UUID
+  post_id: string; // UUID
+  user_id: string; // UUID
+  comment_content: string;
+  comment_created_at: string; // ISO8601 date string
+  comment_updated_at: string | null; // ISO8601 date string or null
+  parent_comment_id: string | null; // UUID or null
+  total_upvotes: number;
+  total_downvotes: number;
+  vote_state: 0 | 1 | 2;
+}
+
 export interface ReadPostResponse {
   post: Post;
-  comments: Comment[];
+  comments: CommentResponse[];
   vote_state: 0 | 1 | 2;
 }
 
