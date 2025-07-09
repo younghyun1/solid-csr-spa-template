@@ -26,12 +26,16 @@ export const routes: RouteDefinition[] = [
       {
         path: "/:post_id",
         component: lazy(() => import("./pages/posts/View")),
-      }
-    ]
+      },
+    ],
   },
   {
     path: "/login",
     component: lazy(() => import("./pages/login")),
+  },
+  {
+    path: "/register",
+    component: lazy(() => import("./pages/signup")),
   },
   {
     path: "**",

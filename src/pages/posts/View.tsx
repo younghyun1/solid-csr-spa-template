@@ -1,4 +1,5 @@
 import { Show, createSignal, createResource, For } from "solid-js";
+import { createStore } from "solid-js/store";
 import { useParams } from "@solidjs/router";
 import { blogApi } from "../../services/all_api";
 // import MarkdownEditor from "../../components/MarkdownEditor";
@@ -31,10 +32,7 @@ export default function PostViewPage() {
   const handleVotePost = async (is_upvote: boolean) => {
     if (!postId()) return;
     try {
-      const resp = await blogApi.votePost(
-        { is_upvote },
-        postId()
-      );
+      const resp = await blogApi.votePost({ is_upvote }, postId());
       setOptimisticPostVote({
         upvote_count: resp.data.upvote_count,
         downvote_count: resp.data.downvote_count,
@@ -45,12 +43,94 @@ export default function PostViewPage() {
     }
   };
 
-  const handleVoteComment = async (comment_id: string, is_upvote: boolean) => {
+  // NEW: Store for optimistic comment vote states
+  const [optimisticCommentVotes, setOptimisticCommentVotes] = createStore<
+    Record<
+      string,
+      {
+        total_upvotes: number;
+        total_downvotes: number;
+        vote_state: 1 | 2 | null;
+      }
+    >
+  >({});
+
+  // Optimistic comment voting
+  const handleVoteComment = async (comment: any, is_upvote: boolean) => {
+    const comment_id = comment.comment_id;
+    const currentVoteState = (() => {
+      // Prefer optimistic state if present, fallback to original
+      if (
+        optimisticCommentVotes[comment_id] !== undefined &&
+        optimisticCommentVotes[comment_id].vote_state !== undefined
+      ) {
+        return optimisticCommentVotes[comment_id].vote_state;
+      }
+      return comment.vote_state;
+    })();
+    const currentUpvotes =
+      optimisticCommentVotes[comment_id]?.total_upvotes ??
+      comment.total_upvotes ??
+      0;
+    const currentDownvotes =
+      optimisticCommentVotes[comment_id]?.total_downvotes ??
+      comment.total_downvotes ??
+      0;
+
+    // Optimistically update the UI
+    setOptimisticCommentVotes(comment_id, (prev) => {
+      let newUpvotes = currentUpvotes;
+      let newDownvotes = currentDownvotes;
+      let newVoteState: 1 | 2 | null = is_upvote ? 1 : 2;
+
+      if (is_upvote) {
+        if (currentVoteState === 1) {
+          // Un-upvoting
+          newUpvotes--;
+          newVoteState = null;
+        } else {
+          newUpvotes++;
+          if (currentVoteState === 2) newDownvotes--; // Was downvoted before
+        }
+      } else {
+        // Downvoting
+        if (currentVoteState === 2) {
+          // Un-downvoting
+          newDownvotes--;
+          newVoteState = null;
+        } else {
+          newDownvotes++;
+          if (currentVoteState === 1) newUpvotes--; // Was upvoted before
+        }
+      }
+
+      return {
+        total_upvotes: newUpvotes,
+        total_downvotes: newDownvotes,
+        vote_state: newVoteState,
+      };
+    });
+
     try {
-      await blogApi.voteComment({ is_upvote }, postId(), comment_id);
-      refetch();
+      const resp = await blogApi.voteComment(
+        { is_upvote },
+        postId(),
+        comment_id,
+      );
+      setOptimisticCommentVotes(comment_id, {
+        total_upvotes: resp.data.upvote_count,
+        total_downvotes: resp.data.downvote_count,
+        vote_state:
+          resp.data.is_upvote === null ? null : resp.data.is_upvote ? 1 : 2,
+      });
+      // No full refetch here
     } catch (_) {
-      // Optionally handle error
+      // On error, revert the optimistic update
+      setOptimisticCommentVotes(comment_id, {
+        total_upvotes: currentUpvotes,
+        total_downvotes: currentDownvotes,
+        vote_state: currentVoteState,
+      });
     }
   };
 
@@ -101,99 +181,118 @@ export default function PostViewPage() {
   function renderComments(comments: any[], depth = 0) {
     return (
       <For each={comments}>
-        {(comment) => (
-          <div
-            class={`mt-3 p-3 rounded bg-gray-50 dark:bg-gray-800`}
-            style={{ "margin-left": `${depth * 24}px` }}
-          >
-            <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
-              <span class="font-bold">{comment.user_id ?? "Guest"}</span>
-              <span class="ml-3 text-xs">
-                {new Date(comment.comment_created_at).toLocaleString()}
-              </span>
-            </div>
+        {(comment) => {
+          // Get the optimistic state for this specific comment
+          const optimisticState = () =>
+            optimisticCommentVotes[comment.comment_id];
+
+          return (
             <div
-              class="prose prose-sm dark:prose-invert"
-              innerHTML={comment.comment_content}
-            />
-            <div class="flex items-center gap-2 mt-2 mb-1">
-              {/* Horizontal voting bar: Up arrow | Up count | Down count | Down arrow */}
-              <button
-                class={`text-lg px-1 ${comment.vote_state === 1 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
-                onClick={() => handleVoteComment(comment.comment_id, true)}
-                title="Upvote"
-              >
-                ▲
-              </button>
-              <span class="text-sm text-green-700 dark:text-green-400">
-                {comment.total_upvotes ?? 0}
-              </span>
-              <span class="text-sm text-red-500">
-                {comment.total_downvotes > 0
-                  ? "-" + comment.total_downvotes
-                  : 0}
-              </span>
-              <button
-                class={`text-lg px-1 ${comment.vote_state === 2 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
-                onClick={() => handleVoteComment(comment.comment_id, false)}
-                title="Downvote"
-              >
-                ▼
-              </button>
-              {/* <button class="ml-3 text-xs text-blue-500 hover:underline" onClick={() => setReplyTo(comment.comment_id)}>
-              Reply
-            </button> */}
-            </div>
-            {/* Reply editor: Uncomment to enable replying to individual comments */}
-            {/* {replyTo() === comment.comment_id && (
-            <form
-              class="flex flex-col gap-2 mt-1"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setReplyLoadingId(comment.comment_id);
-                setReplyError(null);
-                try {
-                  await blogApi.submitComment({
-                    is_guest: !isAuthenticated(),
-                    guest_id: null,
-                    guest_password: null,
-                    post_id: postId(),
-                    parent_comment_id: comment.comment_id,
-                    comment_content: replyValue(),
-                  });
-                  setReplyTo(null);
-                  setReplyValue("");
-                  refetch();
-                } catch (err: any) {
-                  setReplyError(err?.message ?? "Failed to submit reply");
-                } finally {
-                  setReplyLoadingId(null);
-                }
-              }}
+              class={`mt-3 p-3 rounded bg-gray-50 dark:bg-gray-800`}
+              style={{ "margin-left": `${depth * 24}px` }}
             >
-              <textarea
-                class="w-full min-h-[60px] border border-gray-300 dark:border-gray-700 rounded p-2"
-                value={replyValue()}
-                onInput={(e) => setReplyValue(e.currentTarget.value)}
-                placeholder="Write a reply..."
+              <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
+                <span class="font-bold">{comment.user_id ?? "Guest"}</span>
+                <span class="ml-3 text-xs">
+                  {new Date(comment.comment_created_at).toLocaleString()}
+                </span>
+              </div>
+              <div
+                class="prose prose-sm dark:prose-invert"
+                innerHTML={comment.comment_content}
               />
-              <Show when={replyError()}>
-                <span class="text-red-600">{replyError()}</span>
-              </Show>
-              <button
-                class="self-end bg-blue-600 text-white px-3 py-1 rounded font-semibold disabled:opacity-60 transition"
-                type="submit"
-                disabled={replyLoadingId() === comment.comment_id || !replyValue().trim()}
+              <div class="flex items-center gap-2 mt-2 mb-1">
+                {/* Horizontal voting bar: Up arrow | Up count | Down count | Down arrow */}
+                <button
+                  class={`text-lg px-1 ${
+                    (optimisticState()?.vote_state ?? comment.vote_state) === 1
+                      ? "text-green-500 font-bold"
+                      : "text-gray-400 hover:text-green-500"
+                  }`}
+                  onClick={() => handleVoteComment(comment, true)}
+                  title="Upvote"
+                >
+                  ▲
+                </button>
+                <span class="text-sm text-green-700 dark:text-green-400">
+                  {optimisticState()?.total_upvotes ??
+                    comment.total_upvotes ??
+                    0}
+                </span>
+                <span class="text-sm text-red-500">
+                  {(optimisticState()?.total_downvotes ??
+                    comment.total_downvotes) > 0
+                    ? "-" +
+                      (optimisticState()?.total_downvotes ??
+                        comment.total_downvotes)
+                    : 0}
+                </span>
+                <button
+                  class={`text-lg px-1 ${
+                    (optimisticState()?.vote_state ?? comment.vote_state) === 2
+                      ? "text-red-500 font-bold"
+                      : "text-gray-400 hover:text-red-500"
+                  }`}
+                  onClick={() => handleVoteComment(comment, false)}
+                  title="Downvote"
+                >
+                  ▼
+                </button>
+                {/* <button class="ml-3 text-xs text-blue-500 hover:underline" onClick={() => setReplyTo(comment.comment_id)}>
+                Reply
+              </button> */}
+              </div>
+              {/* Reply editor: Uncomment to enable replying to individual comments */}
+              {/* {replyTo() === comment.comment_id && (
+              <form
+                class="flex flex-col gap-2 mt-1"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setReplyLoadingId(comment.comment_id);
+                  setReplyError(null);
+                  try {
+                    await blogApi.submitComment({
+                      is_guest: !isAuthenticated(),
+                      guest_id: null,
+                      guest_password: null,
+                      post_id: postId(),
+                      parent_comment_id: comment.comment_id,
+                      comment_content: replyValue(),
+                    });
+                    setReplyTo(null);
+                    setReplyValue("");
+                    refetch();
+                  } catch (err: any) {
+                    setReplyError(err?.message ?? "Failed to submit reply");
+                  } finally {
+                    setReplyLoadingId(null);
+                  }
+                }}
               >
-                {replyLoadingId() === comment.comment_id ? "Posting..." : "Reply"}
-              </button>
-            </form>
-          )} */}
-            {comment.children &&
-              comment.children.length > 0 &&
-              renderComments(comment.children, depth + 1)}
-          </div>
-        )}
+                <textarea
+                  class="w-full min-h-[60px] border border-gray-300 dark:border-gray-700 rounded p-2"
+                  value={replyValue()}
+                  onInput={(e) => setReplyValue(e.currentTarget.value)}
+                  placeholder="Write a reply..."
+                />
+                <Show when={replyError()}>
+                  <span class="text-red-600">{replyError()}</span>
+                </Show>
+                <button
+                  class="self-end bg-blue-600 text-white px-3 py-1 rounded font-semibold disabled:opacity-60 transition"
+                  type="submit"
+                  disabled={replyLoadingId() === comment.comment_id || !replyValue().trim()}
+                >
+                  {replyLoadingId() === comment.comment_id ? "Posting..." : "Reply"}
+                </button>
+              </form>
+            )} */}
+              {comment.children &&
+                comment.children.length > 0 &&
+                renderComments(comment.children, depth + 1)}
+            </div>
+          );
+        }}
       </For>
     );
   }
@@ -213,10 +312,8 @@ export default function PostViewPage() {
           // Reset optimistic state when a new post is loaded/refreshed
           if (
             optimisticPostVote() &&
-            (
-              typeof data().post?.total_upvotes === "number" &&
-              optimisticPostVote()!.upvote_count !== data().post.total_upvotes
-            )
+            typeof data().post?.total_upvotes === "number" &&
+            optimisticPostVote()!.upvote_count !== data().post.total_upvotes
           ) {
             setOptimisticPostVote(null);
           }
@@ -227,14 +324,13 @@ export default function PostViewPage() {
                 <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
                   <button
                     class={`text-2xl transition ${
-                      (optimisticPostVote()
+                      optimisticPostVote()
                         ? optimisticPostVote()!.is_upvote === true
                           ? "text-green-500 font-bold"
                           : "text-gray-400 hover:text-green-500"
                         : data().vote_state === 0
                           ? "text-green-500 font-bold"
                           : "text-gray-400 hover:text-green-500"
-                      )
                     }`}
                     aria-label="Upvote"
                     onClick={() => handleVotePost(true)}
@@ -262,14 +358,13 @@ export default function PostViewPage() {
                   </span>
                   <button
                     class={`text-2xl transition ${
-                      (optimisticPostVote()
+                      optimisticPostVote()
                         ? optimisticPostVote()!.is_upvote === false
                           ? "text-red-500 font-bold"
                           : "text-gray-400 hover:text-red-500"
                         : data().vote_state === 1
                           ? "text-red-500 font-bold"
                           : "text-gray-400 hover:text-red-500"
-                      )
                     }`}
                     aria-label="Downvote"
                     onClick={() => handleVotePost(false)}
@@ -303,7 +398,10 @@ export default function PostViewPage() {
               <hr class="my-5" />
               <section>
                 <h3 class="text-lg font-semibold mb-2">Add Comment</h3>
-                <form onSubmit={handleSubmitComment} class="flex flex-col gap-2">
+                <form
+                  onSubmit={handleSubmitComment}
+                  class="flex flex-col gap-2"
+                >
                   <textarea
                     class="w-full min-h-[120px] border border-gray-300 dark:border-gray-700 rounded p-2"
                     value={commentValue()}
@@ -323,7 +421,7 @@ export default function PostViewPage() {
                 </form>
               </section>
             </>
-          )
+          );
         }}
       </Show>
     </main>
