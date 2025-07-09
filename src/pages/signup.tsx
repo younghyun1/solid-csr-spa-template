@@ -25,7 +25,13 @@ function SignupPage() {
 
   // Fetch countries and languages on mount
   createEffect(() => {
-    dropdownApi.countryList().then((res) => setCountries(res.data ?? []));
+    dropdownApi
+      .countryList()
+      .then((res) =>
+        setCountries(
+          Array.isArray(res.data?.countries) ? res.data.countries : [],
+        ),
+      );
     dropdownApi.languageList().then((res) => setLanguages(res.data ?? []));
   });
 
@@ -34,7 +40,9 @@ function SignupPage() {
     if (userCountry() !== "") {
       dropdownApi
         .countrySubdivisions(userCountry())
-        .then((res) => setSubdivisions(res.data ?? []));
+        .then((res) =>
+          setSubdivisions(Array.isArray(res.data) ? res.data : []),
+        );
     } else {
       setSubdivisions([]);
     }
@@ -135,66 +143,69 @@ function SignupPage() {
             />
             <select
               value={userCountry() ?? ""}
-              onInput={(e) => setUserCountry(Number(e.currentTarget.value))}
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
+              onInput={(e) =>
+                setUserCountry(
+                  e.currentTarget.value === ""
+                    ? ""
+                    : Number(e.currentTarget.value),
+                )
+              }
+              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
               required
-              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option
-                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
-                style={{ color: "inherit", "background-color": "inherit" }}
-                value=""
-              >
-                Select Country...
-              </option>
-              {countries().map((country) => {
-                // Try to get Unicode regional country code flag
-                // country.country_code might be the 2-letter code
-                let flag = "";
-                if (country.country_code && country.country_code.length === 2) {
-                  flag = country.country_code
-                    .toUpperCase()
-                    .replace(/./g, (char) =>
-                      String.fromCodePoint(127397 + char.charCodeAt(0)),
-                    );
-                }
-                return (
-                  <option
-                    value={country.country_id}
-                    selected={userCountry() == country.country_id}
-                    class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
-                    style={{ color: "inherit", "background-color": "inherit" }}
-                  >
-                    {flag ? `${flag} ` : ""}
-                    {country.country_name}
-                  </option>
-                );
-              })}
+              <option value="">Select Country...</option>
+              {countries().map((country) => (
+                <option
+                  value={country.country_code}
+                  selected={userCountry() == country.country_code?.toString()}
+                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
+                >
+                  {(country.country_flag ? country.country_flag + " " : "") +
+                    (country.country_eng_name ?? country.country_name)}
+                </option>
+              ))}
             </select>
             <select
               value={userLanguage() ?? ""}
-              onInput={(e) => setUserLanguage(Number(e.currentTarget.value))}
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
+              onInput={(e) =>
+                setUserLanguage(
+                  e.currentTarget.value === ""
+                    ? ""
+                    : Number(e.currentTarget.value),
+                )
+              }
+              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
               required
-              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option
-                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
-                style={{ color: "inherit", "background-color": "inherit" }}
-                value=""
-              >
-                Select Language...
-              </option>
-              {languages().map((lang) => (
-                <option
-                  value={lang.language_id}
-                  selected={userLanguage() == lang.language_id}
-                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
-                  style={{ color: "inherit", "background-color": "inherit" }}
-                >
-                  {lang.language_name}
-                </option>
-              ))}
+              <option value="">Select Language...</option>
+              {(() => {
+                // Bubble up the current country's primary language
+                let allLangs = languages() ?? [];
+                let primaryLangId = (() => {
+                  const country = countries().find(
+                    (c) => c.country_code === Number(userCountry()),
+                  );
+                  return country?.country_primary_language;
+                })();
+                let sortedLangs = [...allLangs];
+                if (primaryLangId) {
+                  // Put primary language(s) at the top, without duplicates
+                  sortedLangs.sort((a, b) => {
+                    if (a.language_id === primaryLangId) return -1;
+                    if (b.language_id === primaryLangId) return 1;
+                    return 0;
+                  });
+                }
+                return sortedLangs.map((lang) => (
+                  <option
+                    value={lang.language_id}
+                    selected={userLanguage() == lang.language_id?.toString()}
+                    class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
+                  >
+                    {lang.language_name ?? lang.language_eng_name}
+                  </option>
+                ));
+              })()}
             </select>
             <select
               value={userSubdivision() ?? ""}
@@ -205,23 +216,15 @@ function SignupPage() {
                     : Number(e.currentTarget.value),
                 )
               }
-              class="w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 appearance-none"
+              class="w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
               disabled={!subdivisions().length}
-              style={{ color: "inherit", "background-color": "inherit" }}
             >
-              <option
-                class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950"
-                style={{ color: "inherit", "background-color": "inherit" }}
-                value=""
-              >
-                No Subdivision / Not Applicable
-              </option>
+              <option value="">No Subdivision / Not Applicable</option>
               {subdivisions().map((sub) => (
                 <option
                   value={sub.subdivision_id}
-                  selected={userSubdivision() == sub.subdivision_id}
-                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
-                  style={{ color: "inherit", "background-color": "inherit" }}
+                  selected={userSubdivision() == sub.subdivision_id?.toString()}
+                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
                 >
                   {sub.subdivision_name}
                 </option>
