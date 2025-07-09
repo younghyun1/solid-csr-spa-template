@@ -1,14 +1,17 @@
-import { createSignal, createEffect, Show } from "solid-js";
+import { createSignal, createEffect, onMount, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { authApi, dropdownApi } from "../services/all_api";
 
 function SignupPage() {
+  // form fields
   const [userName, setUserName] = createSignal("");
   const [userEmail, setUserEmail] = createSignal("");
   const [userPassword, setUserPassword] = createSignal("");
   const [userCountry, setUserCountry] = createSignal<number | "">("");
   const [userLanguage, setUserLanguage] = createSignal<number | "">("");
   const [userSubdivision, setUserSubdivision] = createSignal<number | "">(null);
+
+  // status
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [success, setSuccess] = createSignal<null | {
@@ -16,34 +19,55 @@ function SignupPage() {
     verify_by: string;
   }>(null);
 
-  // Dropdown options
+  // dropdown data
   const [countries, setCountries] = createSignal<any[]>([]);
   const [languages, setLanguages] = createSignal<any[]>([]);
   const [subdivisions, setSubdivisions] = createSignal<any[]>([]);
 
   const navigate = useNavigate();
 
-  // Fetch countries and languages on mount
-  createEffect(() => {
+  // initial fetch on mount
+  onMount(() => {
+    console.log("[onMount] fetching country & language lists…");
     dropdownApi
       .countryList()
-      .then((res) =>
-        setCountries(
-          Array.isArray(res.data?.countries) ? res.data.countries : [],
-        ),
-      );
-    dropdownApi.languageList().then((res) => setLanguages(res.data ?? []));
+      .then((res) => {
+        const list = Array.isArray(res.data?.countries)
+          ? res.data.countries
+          : [];
+        console.log("[countryList] got", list.length, "countries");
+        setCountries(list);
+      })
+      .catch((e) => console.error("[countryList] error", e));
+
+    dropdownApi
+      .languageList()
+      .then((res) => {
+        const list = res.data ?? [];
+        console.log("[languageList] got", list.length, "languages");
+        setLanguages(list);
+      })
+      .catch((e) => console.error("[languageList] error", e));
   });
 
-  // Fetch subdivisions when country changes
+  // fetch subdivisions whenever country changes
   createEffect(() => {
-    if (userCountry() !== "") {
+    const c = userCountry();
+    console.log("[effect] userCountry changed to", c);
+    if (c !== "") {
       dropdownApi
-        .countrySubdivisions(userCountry())
-        .then((res) =>
-          setSubdivisions(Array.isArray(res.data) ? res.data : []),
-        );
+        .countrySubdivisions(c)
+        .then((res) => {
+          const subs = Array.isArray(res.data) ? res.data : [];
+          console.log("[subdivisions] got", subs.length, "for country", c);
+          setSubdivisions(subs);
+        })
+        .catch((e) => {
+          console.error("[subdivisions] error", e);
+          setSubdivisions([]);
+        });
     } else {
+      console.log("[subdivisions] clearing due to no country");
       setSubdivisions([]);
     }
   });
@@ -53,47 +77,66 @@ function SignupPage() {
     setLoading(true);
     setError(null);
     setSuccess(null);
+
+    // basic validation
+    if (
+      !userName() ||
+      !userEmail() ||
+      !userPassword() ||
+      !userCountry() ||
+      !userLanguage()
+    ) {
+      setError("Please fill out all required fields.");
+      console.warn("[handleSubmit] validation failed");
+      setLoading(false);
+      return;
+    }
+
+    const body = {
+      user_name: userName(),
+      user_email: userEmail(),
+      user_password: userPassword(),
+      user_country: Number(userCountry()),
+      user_language: Number(userLanguage()),
+      user_subdivision:
+        userSubdivision() === "" ? null : Number(userSubdivision()),
+    };
+    console.log("[handleSubmit] submitting:", body);
+
     try {
-      // Basic validation
-      if (
-        !userName() ||
-        !userEmail() ||
-        !userPassword() ||
-        !userCountry() ||
-        !userLanguage()
-      ) {
-        setError("Please fill out all required fields.");
-        setLoading(false);
-        return;
-      }
-      const body = {
-        user_name: userName(),
-        user_email: userEmail(),
-        user_password: userPassword(),
-        user_country: Number(userCountry()),
-        user_language: Number(userLanguage()),
-        user_subdivision:
-          userSubdivision() === "" ? null : Number(userSubdivision()),
-      };
       const res = await authApi.signup(body);
+      console.log("[signup API] response", res);
       if (res.success && res.data) {
+        console.log("[signup API] success, setting success state");
         setSuccess(res.data);
       } else {
+        console.warn("[signup API] reported failure");
         setError("Signup failed.");
       }
-    } catch (e: any) {
-      setError(e?.message || "Signup failed.");
+    } catch (err: any) {
+      console.error("[signup API] exception", err);
+      setError(err?.message || "Signup failed.");
     } finally {
       setLoading(false);
     }
   };
 
+  // shared classes for inputs & selects
+  const commonFieldClasses =
+    "w-full mb-4 rounded px-3 py-3 border " +
+    "border-gray-300 dark:border-gray-700 " +
+    "bg-white dark:bg-gray-900 " +
+    "text-gray-900 dark:text-gray-100 " +
+    "focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 " +
+    "transition-colors duration-150";
+
   return (
-    <div class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-90">
-      <div class="p-8 rounded-lg bg-white dark:bg-gray-800 shadow-xl min-w-[350px] flex flex-col items-center transition-colors duration-90">
+    <div class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-150">
+      <div class="p-8 rounded-lg bg-white dark:bg-gray-800 shadow-xl min-w-[350px] flex flex-col items-center transition-colors duration-150">
         <h2 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">
           Sign Up
         </h2>
+
         <Show
           when={!success()}
           fallback={
@@ -103,8 +146,11 @@ function SignupPage() {
                 account.
               </div>
               <button
-                class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-90 font-semibold"
-                onClick={() => navigate("/login")}
+                class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onClick={() => {
+                  console.log("[fallback] navigating to /login");
+                  navigate("/login");
+                }}
               >
                 Go to Login
               </button>
@@ -119,138 +165,164 @@ function SignupPage() {
               type="text"
               placeholder="Username"
               value={userName()}
-              onInput={(e) => setUserName(e.currentTarget.value)}
-              class="w-full mb-4 text-base rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              onInput={(e) => {
+                const v = e.currentTarget.value;
+                console.log("[input] userName:", v);
+                setUserName(v);
+              }}
+              class={commonFieldClasses}
               required
             />
+
             <input
               type="email"
               placeholder="Email"
               autocomplete="username email"
               value={userEmail()}
-              onInput={(e) => setUserEmail(e.currentTarget.value)}
-              class="w-full mb-4 text-base rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              onInput={(e) => {
+                const v = e.currentTarget.value;
+                console.log("[input] userEmail:", v);
+                setUserEmail(v);
+              }}
+              class={commonFieldClasses}
               required
             />
+
             <input
               type="password"
               placeholder="Password"
               autocomplete="new-password"
               value={userPassword()}
-              onInput={(e) => setUserPassword(e.currentTarget.value)}
-              class="w-full mb-4 text-base rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              onInput={(e) => {
+                const v = e.currentTarget.value;
+                console.log("[input] userPassword:", v);
+                setUserPassword(v);
+              }}
+              class={commonFieldClasses}
               required
             />
+
             <select
-              value={userCountry() ?? ""}
-              onInput={(e) =>
-                setUserCountry(
-                  e.currentTarget.value === ""
-                    ? ""
-                    : Number(e.currentTarget.value),
-                )
-              }
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
+              value={userCountry()}
+              onInput={(e) => {
+                const raw = e.currentTarget.value;
+                const val = raw === "" ? "" : Number(raw);
+                console.log("[select] userCountry:", val);
+                setUserCountry(val);
+              }}
+              class={commonFieldClasses}
               required
             >
-              <option value="">Select Country...</option>
-              {countries().map((country) => (
+              <option
+                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                value=""
+              >
+                Select Country…
+              </option>
+              {countries().map((c) => (
                 <option
-                  value={country.country_code}
-                  selected={userCountry() == country.country_code?.toString()}
-                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
+                  value={c.country_code}
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
-                  {(country.country_flag ? country.country_flag + " " : "") +
-                    (country.country_eng_name ?? country.country_name)}
+                  {(c.country_flag ? c.country_flag + " " : "") +
+                    (c.country_eng_name ?? c.country_name)}
                 </option>
               ))}
             </select>
+
             <select
-              value={userLanguage() ?? ""}
-              onInput={(e) =>
-                setUserLanguage(
-                  e.currentTarget.value === ""
-                    ? ""
-                    : Number(e.currentTarget.value),
-                )
-              }
-              class="w-full mb-4 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
-              style="color: inherit; background-color: inherit;"
+              value={userLanguage()}
+              onInput={(e) => {
+                const raw = e.currentTarget.value;
+                const val = raw === "" ? "" : Number(raw);
+                console.log("[select] userLanguage:", val);
+                setUserLanguage(val);
+              }}
+              class={commonFieldClasses}
               required
             >
-              <option value="">Select Language...</option>
+              <option
+                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                value=""
+              >
+                Select Language…
+              </option>
               {(() => {
-                const allLangs = languages() ?? [];
+                // primary-first reorder
+                const all = languages() ?? [];
                 const country = countries().find(
                   (c) => Number(c.country_code) === Number(userCountry()),
                 );
-                const primaryLangId = Number(country?.country_primary_language);
-                let withPrimaryFirst = allLangs;
+                const primary = Number(country?.country_primary_language);
+                let ordered = all;
                 if (
-                  primaryLangId &&
-                  allLangs.some(
-                    (lang) => Number(lang.language_id) === primaryLangId,
-                  )
+                  primary &&
+                  all.some((l) => Number(l.language_id) === primary)
                 ) {
-                  withPrimaryFirst = [
-                    ...allLangs.filter(
-                      (lang) => Number(lang.language_id) === primaryLangId,
-                    ),
-                    ...allLangs.filter(
-                      (lang) => Number(lang.language_id) !== primaryLangId,
-                    ),
+                  ordered = [
+                    ...all.filter((l) => Number(l.language_id) === primary),
+                    ...all.filter((l) => Number(l.language_id) !== primary),
                   ];
                 }
-                return withPrimaryFirst.map((lang) => (
+                return ordered.map((l) => (
                   <option
-                    value={lang.language_id}
-                    selected={userLanguage() === String(lang.language_id)}
-                    class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
+                    value={l.language_id}
+                    class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   >
-                    {lang.language_name ?? lang.language_eng_name}
+                    {l.language_name ?? l.language_eng_name}
                   </option>
                 ));
               })()}
             </select>
+
             <select
-              value={userSubdivision() ?? ""}
-              onInput={(e) =>
-                setUserSubdivision(
-                  e.currentTarget.value === ""
-                    ? null
-                    : Number(e.currentTarget.value),
-                )
-              }
-              class="w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-90"
-              disabled={!subdivisions().length}
+              value={userSubdivision()}
+              onInput={(e) => {
+                const raw = e.currentTarget.value;
+                const val = raw === "" ? null : Number(raw);
+                console.log("[select] userSubdivision:", val);
+                setUserSubdivision(val);
+              }}
+              class={`w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-150`}
+              disabled={subdivisions().length === 0}
             >
-              <option value="">No Subdivision / Not Applicable</option>
-              {subdivisions().map((sub) => (
+              <option
+                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                value=""
+              >
+                No Subdivision / N/A
+              </option>
+              {subdivisions().map((s) => (
                 <option
-                  value={sub.subdivision_id}
-                  selected={userSubdivision() == sub.subdivision_id?.toString()}
-                  class="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
+                  value={s.subdivision_id}
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
-                  {sub.subdivision_name}
+                  {s.subdivision_name}
                 </option>
               ))}
             </select>
+
             <Show when={error()}>
               <div class="w-full text-sm text-red-600 dark:text-red-400 mb-3 text-center">
                 {error()}
               </div>
             </Show>
+
             <button
-              class="w-full py-3 text-base bg-blue-600 hover:bg-blue-700 text-white rounded mb-3 transition-colors duration-90 font-semibold disabled:opacity-70"
+              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded mb-3 transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-70"
               type="submit"
               disabled={loading()}
             >
-              {loading() ? "Signing Up..." : "Sign Up"}
+              {loading() ? "Signing Up…" : "Sign Up"}
             </button>
+
             <button
-              class="w-full py-3 text-base bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 rounded transition-colors duration-90 font-semibold"
+              class="w-full py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 rounded transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                console.log("[button] Back to login");
+                navigate("/login");
+              }}
             >
               Back to Login
             </button>
