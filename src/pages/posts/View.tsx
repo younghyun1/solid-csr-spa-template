@@ -242,103 +242,109 @@ export default function PostViewPage() {
   }
 
   return (
-    <main class="max-w-2xl mx-auto py-8">
-      <Show when={postResource.loading}>
-        <div>Loading post...</div>
-      </Show>
-      <Show when={postResource.error}>
-        <div class="text-red-600">
-          Failed to load post: {String(postResource.error)}
-        </div>
-      </Show>
-      <Show when={postResource()}>
-        {(data) => {
-          const postVoteState = () =>
-            optimisticVotes.post?.vote_state ?? data().vote_state;
-          const postUpvotes = () =>
-            optimisticVotes.post?.total_upvotes ?? data().post.total_upvotes;
-          const postDownvotes = () =>
-            optimisticVotes.post?.total_downvotes ??
-            data().post.total_downvotes;
+    <main class="w-full max-w-5xl mx-auto py-8 px-4 flex flex-row gap-8">
+      <div class="flex-1">
+        <Show when={postResource.loading}>
+          <div>Loading post...</div>
+        </Show>
+        <Show when={postResource.error}>
+          <div class="text-red-600">
+            Failed to load post: {String(postResource.error)}
+          </div>
+        </Show>
+        <Show when={postResource()}>
+          {(data) => {
+            const postVoteState = () =>
+              optimisticVotes.post?.vote_state ?? data().vote_state;
+            const postUpvotes = () =>
+              optimisticVotes.post?.total_upvotes ?? data().post.total_upvotes;
+            const postDownvotes = () =>
+              optimisticVotes.post?.total_downvotes ??
+              data().post.total_downvotes;
 
-          return (
-            <>
-              <div class="mb-4 flex flex-row items-start gap-4">
-                <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
-                  <button
-                    class={`text-2xl transition ${postVoteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
-                    onClick={() =>
-                      handleVote("post", true, { postId: data().post.post_id })
-                    }
-                    aria-label="Upvote"
-                  >
-                    ▲
-                  </button>
-                  <span class="text-base font-semibold text-center min-w-[2ch] my-1">
-                    {postUpvotes()}
-                  </span>
-                  <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-red-500">
-                    {postDownvotes() > 0 ? `-${postDownvotes()}` : 0}
-                  </span>
-                  <button
-                    class={`text-2xl transition ${postVoteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
-                    onClick={() =>
-                      handleVote("post", false, { postId: data().post.post_id })
-                    }
-                    aria-label="Downvote"
-                  >
-                    ▼
-                  </button>
-                </div>
-                <div class="flex-1">
-                  <h1 class="text-3xl font-bold mb-2">
-                    {data().post.post_title}
-                  </h1>
-                  <div class="flex items-center text-sm text-gray-400 mb-2">
-                    <span>
-                      {new Date(data().post.post_created_at).toLocaleString()}
+            return (
+              <>
+                <div class="mb-4 flex flex-row items-start gap-4">
+                  <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
+                    <button
+                      class={`text-2xl transition ${postVoteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                      onClick={() =>
+                        handleVote("post", true, {
+                          postId: data().post.post_id,
+                        })
+                      }
+                      aria-label="Upvote"
+                    >
+                      ▲
+                    </button>
+                    <span class="text-base font-semibold text-center min-w-[2ch] my-1">
+                      {postUpvotes()}
                     </span>
+                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-red-500">
+                      {postDownvotes() > 0 ? `-${postDownvotes()}` : 0}
+                    </span>
+                    <button
+                      class={`text-2xl transition ${postVoteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                      onClick={() =>
+                        handleVote("post", false, {
+                          postId: data().post.post_id,
+                        })
+                      }
+                      aria-label="Downvote"
+                    >
+                      ▼
+                    </button>
                   </div>
-                  <div
-                    class="prose dark:prose-invert max-w-none mb-3"
-                    innerHTML={data().post.post_content}
-                  />
+                  <div class="flex-1">
+                    <h1 class="text-3xl font-bold mb-2">
+                      {data().post.post_title}
+                    </h1>
+                    <div class="flex items-center text-sm text-gray-400 mb-2">
+                      <span>
+                        {new Date(data().post.post_created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <div
+                      class="prose dark:prose-invert max-w-none mb-3"
+                      innerHTML={data().post.post_content}
+                    />
+                  </div>
                 </div>
-              </div>
-              <hr class="my-5" />
-              <section>
-                <h2 class="text-xl font-semibold mb-3">Comments</h2>
-                {renderComments(buildCommentTree(data().comments || []))}
-              </section>
-              <hr class="my-5" />
-              <section>
-                <h3 class="text-lg font-semibold mb-2">Add Comment</h3>
-                <form
-                  onSubmit={handleSubmitComment}
-                  class="flex flex-col gap-2"
-                >
-                  <textarea
-                    class="w-full min-h-[120px] border rounded p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
-                    value={commentValue()}
-                    onInput={(e) => setCommentValue(e.currentTarget.value)}
-                    placeholder="Write a comment (plaintext)..."
-                  />
-                  <Show when={commentError()}>
-                    <span class="text-red-600">{commentError()}</span>
-                  </Show>
-                  <button
-                    class="self-end bg-blue-600 text-white px-4 py-2 rounded font-semibold disabled:opacity-60 transition"
-                    type="submit"
-                    disabled={commentLoading() || !commentValue().trim()}
+                <hr class="my-5" />
+                <section>
+                  <h2 class="text-xl font-semibold mb-3">Comments</h2>
+                  {renderComments(buildCommentTree(data().comments || []))}
+                </section>
+                <hr class="my-5" />
+                <section>
+                  <h3 class="text-lg font-semibold mb-2">Add Comment</h3>
+                  <form
+                    onSubmit={handleSubmitComment}
+                    class="flex flex-col gap-2"
                   >
-                    {commentLoading() ? "Posting..." : "Post Comment"}
-                  </button>
-                </form>
-              </section>
-            </>
-          );
-        }}
-      </Show>
+                    <textarea
+                      class="w-full min-h-[120px] border rounded p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
+                      value={commentValue()}
+                      onInput={(e) => setCommentValue(e.currentTarget.value)}
+                      placeholder="Write a comment (plaintext)..."
+                    />
+                    <Show when={commentError()}>
+                      <span class="text-red-600">{commentError()}</span>
+                    </Show>
+                    <button
+                      class="self-end bg-blue-600 text-white px-4 py-2 rounded font-semibold disabled:opacity-60 transition"
+                      type="submit"
+                      disabled={commentLoading() || !commentValue().trim()}
+                    >
+                      {commentLoading() ? "Posting..." : "Post Comment"}
+                    </button>
+                  </form>
+                </section>
+              </>
+            );
+          }}
+        </Show>
+      </div>
     </main>
   );
 }
