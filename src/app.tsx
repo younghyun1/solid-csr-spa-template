@@ -84,40 +84,7 @@ const App: Component = (props: { children: Element }) => {
       id="app-root"
       style="display: flex; flex-direction: column; min-height: 100vh;"
     >
-      <TopBar>
-        <li class="py-2 px-4">
-          <A
-            href="/"
-            class="no-underline hover:underline transition-colors duration-90"
-          >
-            Home
-          </A>
-        </li>
-        <li class="py-2 px-4">
-          <A
-            href="/about"
-            class="no-underline hover:underline transition-colors duration-90"
-          >
-            About
-          </A>
-        </li>
-        <li class="py-2 px-4">
-          <A
-            href="/blog"
-            class="no-underline hover:underline transition-colors duration-90"
-          >
-            Blog
-          </A>
-        </li>
-        <li class="py-2 px-4">
-          <A
-            href="/visitor-board"
-            class="no-underline hover:underline transition-colors duration-90"
-          >
-            Visitor Board
-          </A>
-        </li>
-      </TopBar>
+      <TopBar />
       <BuildInfoOverlay />
 
       <main

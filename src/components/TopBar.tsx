@@ -36,18 +36,47 @@ const handleLogout = async () => {
   setMenuOpen(false);
 };
 
-interface TopBarProps {
-  children?: JSX.Element;
-}
-
-const TopBar = (props: TopBarProps) => (
+const TopBar = () => (
   <header class="bg-white text-gray-900 dark:bg-black dark:text-white px-6 py-3 flex items-center justify-between shadow-md transition-colors duration-90">
     <div class="flex items-center gap-6">
       <a href="/" class="text-2xl font-bold tracking-tight">
         Younghyun&apos;s Blog
       </a>
       <nav>
-        <ul class="flex items-center">{props.children}</ul>
+        <ul class="flex items-center">
+          <li class="py-2 px-4">
+            <a
+              href="/"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Home
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/about"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              About
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/blog"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Blog
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/visitor-board"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Visitor Board
+            </a>
+          </li>
+        </ul>
       </nav>
     </div>
     <Show
@@ -61,8 +90,8 @@ const TopBar = (props: TopBarProps) => (
             onClick={toggleTheme}
             style={{
               width: "70px",
-              'min-width': "70px",
-              'justify-content': "center",
+              "min-width": "70px",
+              "justify-content": "center",
             }}
           >
             <span class="inline-block transition-colors duration-90">
@@ -90,7 +119,11 @@ const TopBar = (props: TopBarProps) => (
           class="text-xs border px-2 py-1 rounded border-gray-300 dark:border-gray-400 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-90 flex items-center gap-1"
           aria-label="Toggle dark/light mode"
           onClick={toggleTheme}
-          style={{ width: "70px", 'min-width': "70px", 'justify-content': "center" }}
+          style={{
+            width: "70px",
+            "min-width": "70px",
+            "justify-content": "center",
+          }}
         >
           <span class="inline-block transition-colors duration-90">
             {theme() === "dark" ? "🌙" : "☀️"}
