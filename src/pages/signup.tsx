@@ -3,15 +3,15 @@ import { useNavigate } from "@solidjs/router";
 import { authApi, dropdownApi } from "../services/all_api";
 
 function SignupPage() {
-  // form fields
+  // ––––– form state (all dropdowns as strings!)
   const [userName, setUserName] = createSignal("");
   const [userEmail, setUserEmail] = createSignal("");
   const [userPassword, setUserPassword] = createSignal("");
-  const [userCountry, setUserCountry] = createSignal<number | "">("");
-  const [userLanguage, setUserLanguage] = createSignal<number | "">("");
-  const [userSubdivision, setUserSubdivision] = createSignal<number | "">(null);
+  const [userCountry, setUserCountry] = createSignal("");
+  const [userLanguage, setUserLanguage] = createSignal("");
+  const [userSubdivision, setUserSubdivision] = createSignal("");
 
-  // status
+  // ––––– status flags
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [success, setSuccess] = createSignal<null | {
@@ -19,66 +19,65 @@ function SignupPage() {
     verify_by: string;
   }>(null);
 
-  // dropdown data
+  // ––––– dropdown data
   const [countries, setCountries] = createSignal<any[]>([]);
   const [languages, setLanguages] = createSignal<any[]>([]);
   const [subdivisions, setSubdivisions] = createSignal<any[]>([]);
 
   const navigate = useNavigate();
 
-  // initial fetch on mount
+  // ––––– fetch countries & languages once on mount
   onMount(() => {
-    console.log("[onMount] fetching country & language lists…");
+    console.log("[onMount] fetching countryList & languageList");
     dropdownApi
       .countryList()
       .then((res) => {
-        const list = Array.isArray(res.data?.countries)
+        const arr = Array.isArray(res.data?.countries)
           ? res.data.countries
           : [];
-        console.log("[countryList] got", list.length, "countries");
-        setCountries(list);
+        console.log("[countryList] got", arr.length);
+        setCountries(arr);
       })
-      .catch((e) => console.error("[countryList] error", e));
+      .catch((err) => console.error("[countryList] ERROR", err));
 
     dropdownApi
       .languageList()
       .then((res) => {
-        const list = res.data ?? [];
-        console.log("[languageList] got", list.length, "languages");
-        setLanguages(list);
+        const arr = Array.isArray(res.data) ? res.data : [];
+        console.log("[languageList] got", arr.length);
+        setLanguages(arr);
       })
-      .catch((e) => console.error("[languageList] error", e));
+      .catch((err) => console.error("[languageList] ERROR", err));
   });
 
-  // fetch subdivisions whenever country changes
+  // ––––– whenever userCountry changes, fetch subdivisions
   createEffect(() => {
-    const c = userCountry();
-    console.log("[effect] userCountry changed to", c);
-    if (c !== "") {
+    const cc = userCountry();
+    console.log("[effect] country changed →", cc);
+    if (cc) {
       dropdownApi
-        .countrySubdivisions(c)
+        .countrySubdivisions(Number(cc))
         .then((res) => {
-          const subs = Array.isArray(res.data) ? res.data : [];
-          console.log("[subdivisions] got", subs.length, "for country", c);
-          setSubdivisions(subs);
+          const arr = Array.isArray(res.data) ? res.data : [];
+          console.log("[subdivisions] got", arr.length);
+          setSubdivisions(arr);
         })
-        .catch((e) => {
-          console.error("[subdivisions] error", e);
+        .catch((err) => {
+          console.error("[subdivisions] ERROR", err);
           setSubdivisions([]);
         });
     } else {
-      console.log("[subdivisions] clearing due to no country");
+      console.log("[subdivisions] cleared");
       setSubdivisions([]);
     }
   });
 
+  // ––––– on form submit
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccess(null);
 
-    // basic validation
     if (
       !userName() ||
       !userEmail() ||
@@ -87,68 +86,83 @@ function SignupPage() {
       !userLanguage()
     ) {
       setError("Please fill out all required fields.");
-      console.warn("[handleSubmit] validation failed");
-      setLoading(false);
+      console.warn("[submit] validation failed");
       return;
     }
 
+    setLoading(true);
     const body = {
       user_name: userName(),
       user_email: userEmail(),
       user_password: userPassword(),
       user_country: Number(userCountry()),
       user_language: Number(userLanguage()),
-      user_subdivision:
-        userSubdivision() === "" ? null : Number(userSubdivision()),
+      user_subdivision: userSubdivision() ? Number(userSubdivision()) : null,
     };
-    console.log("[handleSubmit] submitting:", body);
+    console.log("[submit] payload:", body);
 
     try {
       const res = await authApi.signup(body);
-      console.log("[signup API] response", res);
+      console.log("[signup] response", res);
       if (res.success && res.data) {
-        console.log("[signup API] success, setting success state");
         setSuccess(res.data);
       } else {
-        console.warn("[signup API] reported failure");
         setError("Signup failed.");
       }
     } catch (err: any) {
-      console.error("[signup API] exception", err);
-      setError(err?.message || "Signup failed.");
+      console.error("[signup] exception", err);
+      setError(err.message || "Signup failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  // shared classes for inputs & selects
-  const commonFieldClasses =
-    "w-full mb-4 rounded px-3 py-3 border " +
+  // ––––– sort languages: primary first by language_code, rest alphabetically by language_eng_name
+  const sortedLanguages = () => {
+    const all = [...languages()];
+    const cc = Number(userCountry());
+    const country = countries().find((c) => Number(c.country_code) === cc);
+    const primaryCode = Number(country?.country_primary_language);
+
+    // pull out the primary (if any)
+    const primary = all.find((l) => Number(l.language_code) === primaryCode);
+
+    // sort the rest by english name A→Z
+    const rest = all
+      .filter((l) => Number(l.language_code) !== primaryCode)
+      .sort((a, b) => {
+        const na = (a.language_eng_name ?? "").toLowerCase();
+        const nb = (b.language_eng_name ?? "").toLowerCase();
+        return na.localeCompare(nb);
+      });
+
+    return primary ? [primary, ...rest] : rest;
+  };
+
+  const fieldClasses =
+    "w-full mb-4 px-3 py-3 border rounded " +
+    "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 " +
     "border-gray-300 dark:border-gray-700 " +
-    "bg-white dark:bg-gray-900 " +
-    "text-gray-900 dark:text-gray-100 " +
-    "focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 " +
-    "transition-colors duration-150";
+    "focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all";
 
   return (
-    <div class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-150">
-      <div class="p-8 rounded-lg bg-white dark:bg-gray-800 shadow-xl min-w-[350px] flex flex-col items-center transition-colors duration-150">
-        <h2 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+    <div class="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div class="w-[350px] p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
           Sign Up
         </h2>
 
         <Show
           when={!success()}
           fallback={
-            <div class="w-full text-center">
-              <div class="text-green-700 dark:text-green-300 mb-3 font-semibold">
-                Signup successful! Please check your email to verify your
-                account.
-              </div>
+            <div class="text-center">
+              <p class="mb-4 text-green-700 dark:text-green-300">
+                Signup successful! Check your email to verify your account.
+              </p>
               <button
-                class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+                class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                 onClick={() => {
-                  console.log("[fallback] navigating to /login");
+                  console.log("[action] go to /login");
                   navigate("/login");
                 }}
               >
@@ -157,170 +171,106 @@ function SignupPage() {
             </div>
           }
         >
-          <form
-            onSubmit={handleSubmit}
-            class="w-full flex flex-col items-center"
-          >
+          <form onSubmit={handleSubmit}>
             <input
+              class={fieldClasses}
               type="text"
               placeholder="Username"
               value={userName()}
-              onInput={(e) => {
-                const v = e.currentTarget.value;
-                console.log("[input] userName:", v);
-                setUserName(v);
-              }}
-              class={commonFieldClasses}
-              required
+              onInput={(e) => setUserName(e.currentTarget.value)}
             />
 
             <input
+              class={fieldClasses}
               type="email"
               placeholder="Email"
               autocomplete="username email"
               value={userEmail()}
-              onInput={(e) => {
-                const v = e.currentTarget.value;
-                console.log("[input] userEmail:", v);
-                setUserEmail(v);
-              }}
-              class={commonFieldClasses}
-              required
+              onInput={(e) => setUserEmail(e.currentTarget.value)}
             />
 
             <input
+              class={fieldClasses}
               type="password"
               placeholder="Password"
               autocomplete="new-password"
               value={userPassword()}
-              onInput={(e) => {
-                const v = e.currentTarget.value;
-                console.log("[input] userPassword:", v);
-                setUserPassword(v);
-              }}
-              class={commonFieldClasses}
-              required
+              onInput={(e) => setUserPassword(e.currentTarget.value)}
             />
 
             <select
+              class={fieldClasses}
               value={userCountry()}
               onInput={(e) => {
-                const raw = e.currentTarget.value;
-                const val = raw === "" ? "" : Number(raw);
-                console.log("[select] userCountry:", val);
-                setUserCountry(val);
+                console.log("[select] userCountry →", e.currentTarget.value);
+                setUserCountry(e.currentTarget.value);
               }}
-              class={commonFieldClasses}
               required
             >
-              <option
-                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                value=""
-              >
-                Select Country…
-              </option>
+              <option value="">Select Country…</option>
               {countries().map((c) => (
-                <option
-                  value={c.country_code}
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                >
-                  {(c.country_flag ? c.country_flag + " " : "") +
-                    (c.country_eng_name ?? c.country_name)}
+                <option value={c.country_code}>
+                  {c.country_flag ? c.country_flag + " " : ""}
+                  {c.country_eng_name ?? c.country_name}
                 </option>
               ))}
             </select>
 
             <select
+              class={fieldClasses}
               value={userLanguage()}
               onInput={(e) => {
-                const raw = e.currentTarget.value;
-                const val = raw === "" ? "" : Number(raw);
-                console.log("[select] userLanguage:", val);
-                setUserLanguage(val);
+                console.log(
+                  "[select] raw userLanguage →",
+                  e.currentTarget.value,
+                );
+                setUserLanguage(e.currentTarget.value);
               }}
-              class={commonFieldClasses}
               required
             >
-              <option
-                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                value=""
-              >
-                Select Language…
-              </option>
-              {(() => {
-                // primary-first reorder
-                const all = languages() ?? [];
-                const country = countries().find(
-                  (c) => Number(c.country_code) === Number(userCountry()),
-                );
-                const primary = Number(country?.country_primary_language);
-                let ordered = all;
-                if (
-                  primary &&
-                  all.some((l) => Number(l.language_id) === primary)
-                ) {
-                  ordered = [
-                    ...all.filter((l) => Number(l.language_id) === primary),
-                    ...all.filter((l) => Number(l.language_id) !== primary),
-                  ];
-                }
-                return ordered.map((l) => (
-                  <option
-                    value={l.language_id}
-                    class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                  >
-                    {l.language_name ?? l.language_eng_name}
-                  </option>
-                ));
-              })()}
+              <option value="">Select Language…</option>
+              {sortedLanguages().map((l) => (
+                <option value={l.language_code}>{l.language_eng_name}</option>
+              ))}
             </select>
 
             <select
+              class={fieldClasses + " mb-6"}
               value={userSubdivision()}
               onInput={(e) => {
-                const raw = e.currentTarget.value;
-                const val = raw === "" ? null : Number(raw);
-                console.log("[select] userSubdivision:", val);
-                setUserSubdivision(val);
+                console.log(
+                  "[select] userSubdivision →",
+                  e.currentTarget.value,
+                );
+                setUserSubdivision(e.currentTarget.value);
               }}
-              class={`w-full mb-6 rounded px-3 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-150`}
-              disabled={subdivisions().length === 0}
+              disabled={!subdivisions().length}
             >
-              <option
-                class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                value=""
-              >
-                No Subdivision / N/A
-              </option>
+              <option value="">No Subdivision / N/A</option>
               {subdivisions().map((s) => (
-                <option
-                  value={s.subdivision_id}
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                >
-                  {s.subdivision_name}
-                </option>
+                <option value={s.subdivision_id}>{s.subdivision_name}</option>
               ))}
             </select>
 
             <Show when={error()}>
-              <div class="w-full text-sm text-red-600 dark:text-red-400 mb-3 text-center">
+              <div class="mb-4 text-center text-red-600 dark:text-red-400">
                 {error()}
               </div>
             </Show>
 
             <button
-              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded mb-3 transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-70"
               type="submit"
               disabled={loading()}
+              class="w-full mb-3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
             >
               {loading() ? "Signing Up…" : "Sign Up"}
             </button>
 
             <button
-              class="w-full py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 rounded transition-colors duration-150 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
               type="button"
+              class="w-full py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
               onClick={() => {
-                console.log("[button] Back to login");
+                console.log("[action] back to /login");
                 navigate("/login");
               }}
             >
