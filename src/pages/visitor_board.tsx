@@ -75,11 +75,19 @@ export default function VisitorBoard() {
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(map);
 
-        // Add all markers with a large red downwards arrow in popup
+        // Add all markers with a large 📍 emoji as the marker icon
+        const emojiIcon = L.divIcon({
+          className: "emoji-marker",
+          html: "📍",
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -30],
+        });
+
         markers = pairs.map((pair) => {
           const [[lat, lng], count] = pair;
           let popupHtml = `Visitors from here: <b>${count}</b>`;
-          return L.marker([lat, lng])
+          return L.marker([lat, lng], { icon: emojiIcon })
             .addTo(map!)
             .bindPopup(popupHtml);
         });
@@ -108,6 +116,16 @@ export default function VisitorBoard() {
   return (
     <>
       <style>{style}</style>
+      <style>
+        {`
+        .emoji-marker {
+          font-size: 2rem;
+          line-height: 1.2;
+          text-align: center;
+          transform: translateY(-10%);
+        }
+        `}
+      </style>
       <div class="visitor-board-center-outer">
         <div class="visitor-board-wrapper">
           <div ref={(el) => (mapDiv = el)} id="map" class="visitor-board-map" />
