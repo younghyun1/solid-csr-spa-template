@@ -75,11 +75,16 @@ export default function VisitorBoard() {
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(map);
 
+        // Use an icon without a shadow for all markers
+        const noShadowIcon = new L.Icon.Default({ shadowUrl: undefined });
+
         // Add all markers with a large red downwards arrow in popup
         markers = pairs.map((pair) => {
           const [[lat, lng], count] = pair;
           let popupHtml = `Visitors from here: <b>${count}</b>`;
-          return L.marker([lat, lng]).addTo(map!).bindPopup(popupHtml);
+          return L.marker([lat, lng], { icon: noShadowIcon })
+            .addTo(map!)
+            .bindPopup(popupHtml);
         });
 
         if (markers.length > 0) {
