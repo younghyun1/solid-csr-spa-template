@@ -36,3 +36,8 @@ main {
 .easymde-dark .CodeMirror-cursor {
     border-left-color: #e2e8f0; /* gray-300 */
 }
+.chart-wrapper {
+  position: absolute;
+  inset: 0;
+}
+

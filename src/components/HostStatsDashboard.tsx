@@ -1,396 +1,310 @@
-import { createSignal, createEffect, onCleanup, Show } from "solid-js";
-import { theme } from "../state/theme";
+import { onMount, onCleanup, createSignal, Show, For } from "solid-js";
 import { Line } from "solid-chartjs";
-import type { ChartData, ChartOptions } from "chart.js";
+import type { ChartOptions, ChartData } from "chart.js";
+import { theme } from "../state/theme";
 
-// Data structure for stats received from WebSocket
-type HostStats = {
-  cpu_usage: number;
-  mem_total: number; // in KiB
-  mem_free: number; // in KiB
+type HostStatsRaw = {
+  cpu_usage: number; // percent, 0–100
+  mem_total: number; // KiB
+  mem_free: number; // KiB
 };
 
-// This function correctly parses the 20-byte array from the Rust backend.
-function parseHostStats(bytes: Uint8Array): HostStats | null {
-  // cpu_usage: f32 (4 bytes), mem_total: u64 (8 bytes), mem_free: u64 (8 bytes) = 20 bytes
-  if (bytes.length < 20) return null;
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const cpu_usage = view.getFloat32(0, false); // Big-endian
-  const mem_total = view.getBigUint64(4, false); // Big-endian
-  const mem_free = view.getBigUint64(12, false); // Big-endian
-  return {
-    cpu_usage,
-    mem_total: Number(mem_total),
-    mem_free: Number(mem_free),
-  };
+// parse exactly 20 bytes: [f32][u64][u64] (all big-endian)
+function parseHostStats(buf: ArrayBuffer): HostStatsRaw | null {
+  if (buf.byteLength !== 20) return null;
+  const dv = new DataView(buf);
+  const cpu_usage = dv.getFloat32(0, false);
+  const mem_total = Number(dv.getBigUint64(4, false));
+  const mem_free = Number(dv.getBigUint64(12, false));
+  return { cpu_usage, mem_total, mem_free };
 }
 
-/**
- * Formats a value in KiB into a human-readable string (KiB, MiB, GiB).
- * This function is now correct for the data being sent.
- */
 function formatMem(kib: number): string {
   if (kib < 1024) return `${kib.toFixed(0)} KiB`;
-  if (kib < 1024 * 1024) return `${(kib / 1024).toFixed(2)} MiB`;
-  return `${(kib / (1024 * 1024)).toFixed(2)} GiB`;
-}
-
-interface HostStatsDashboardProps {
-  wsUrl?: string;
-  apiKey?: string;
+  if (kib < 1024 * 1024) return `${(kib / 1024).toFixed(1)} MiB`;
+  return `${(kib / (1024 * 1024)).toFixed(1)} GiB`;
 }
 
 const HISTORY_LIMIT = 60;
-
-// Internal state for charting
-type DisplayStat = {
+type Stat = {
   ts: number;
-  cpu_total: number;
-  mem_used: number; // in KiB
-  mem_free: number; // in KiB
-  mem_total: number; // in KiB
+  cpu: number;
+  memT: number;
+  memF: number;
 };
 
-// Color palette generation remains the same. Great for theming!
-function genChartColors(isDark: boolean) {
-  return isDark
-    ? {
-        bg: "#111827",
-        card: "#1f2937",
-        border: "#374151",
-        cpu: "#38bdf8",
-        cpuIdle: "#a7f3d0",
-        memUsed: "#4ade80",
-        memFree: "#818cf8",
-        font: "#e2e8f0",
-        axis: "#e5e7eb",
-      }
-    : {
-        bg: "#f3f4f6",
-        card: "#fff",
-        border: "#d1d5db",
-        cpu: "#2563eb",
-        cpuIdle: "#38bdf8",
-        memUsed: "#22c55e",
-        memFree: "#6366f1",
-        font: "#334155",
-        axis: "#334155",
-      };
-}
-
-export default function HostStatsDashboard(props: HostStatsDashboardProps) {
-  const [statsHistory, setStatsHistory] = createSignal<DisplayStat[]>([]);
+export default function HostStatsDashboard(props: {
+  wsUrl?: string;
+  apiKey?: string;
+}) {
+  const [history, setHistory] = createSignal<Stat[]>([]);
   const [error, setError] = createSignal<string | null>(null);
+  const isDark = () => theme() === "dark";
 
-  const colors = () => genChartColors(theme() === "dark");
+  // simple palette helper
+  const C = () => ({
+    bg: isDark() ? "#1f2937" : "#fff",
+    border: isDark() ? "#374151" : "#d1d5db",
+    font: isDark() ? "#e2e8f0" : "#334155",
+    cpu: isDark() ? "#38bdf8" : "#2563eb",
+    memU: isDark() ? "#4ade80" : "#22c55e",
+    memF: isDark() ? "#818cf8" : "#6366f1",
+    cardBg: isDark() ? "#111827" : "#f3f4f6",
+  });
 
-  createEffect(() => {
-    const wsUrl =
-      props.wsUrl ??
-      import.meta.env.VITE_API_URL?.replace(/^http/, "ws") + "/ws/host-stats";
-    let ws: WebSocket;
+  let ws: WebSocket;
+  onMount(() => {
+    const url =
+      props.wsUrl ||
+      (import.meta.env.VITE_API_URL || "")
+        .replace(/^http/, "ws")
+        .replace(/\/$/, "") + "/ws/host-stats";
 
     try {
-      ws = new WebSocket(wsUrl);
+      ws = new WebSocket(url);
       ws.binaryType = "arraybuffer";
-    } catch (err: any) {
-      setError("Failed to open WebSocket: " + err?.toString());
+    } catch (e: any) {
+      setError("WS open failed: " + e);
       return;
     }
 
     ws.onopen = () => {
-      setError(null); // Clear previous errors on successful connection
+      setError(null);
       if (props.apiKey) {
         ws.send(JSON.stringify({ apiKey: props.apiKey }));
       }
     };
 
     ws.onmessage = (evt) => {
-      const parsed = parseHostStats(new Uint8Array(evt.data));
-      if (parsed) {
-        setStatsHistory((hist) => {
-          const nextStat: DisplayStat = {
-            ts: Date.now(),
-            cpu_total: parsed.cpu_usage,
-            mem_total: parsed.mem_total,
-            mem_free: parsed.mem_free,
-            mem_used: parsed.mem_total - parsed.mem_free,
-          };
-          const newHistory = [...hist, nextStat];
-          // Slice if history is over the limit
-          return newHistory.length > HISTORY_LIMIT
-            ? newHistory.slice(1)
-            : newHistory;
-        });
-      } else {
-        setError("Malformed host stats received");
+      const raw = parseHostStats(evt.data as ArrayBuffer);
+      if (!raw) {
+        setError("Malformed host‐stats packet");
+        return;
       }
+      setHistory((old) => {
+        const next: Stat = {
+          ts: Date.now(),
+          cpu: raw.cpu_usage,
+          memT: raw.mem_total,
+          memF: raw.mem_free,
+        };
+        const arr =
+          old.length < HISTORY_LIMIT ? [...old, next] : [...old.slice(1), next];
+        return arr;
+      });
     };
 
-    ws.onerror = () => setError("A WebSocket error occurred.");
-    ws.onclose = () => setError((prev) => prev || "WebSocket disconnected.");
+    ws.onerror = () => setError("WebSocket error");
+    ws.onclose = () => setError((e) => e || "WebSocket closed");
 
     onCleanup(() => {
       ws.close();
     });
   });
 
-  const stats = () => statsHistory();
+  // convenience
+  const stats = () => history();
   const labels = () =>
-    stats().map((stat) =>
-      new Date(stat.ts).toLocaleTimeString(undefined, { hour12: false }),
+    stats().map((s) =>
+      new Date(s.ts).toLocaleTimeString(undefined, { hour12: false }),
     );
-  const latest = () => stats().at(-1); // .at(-1) is a cleaner way to get the last item
+  const latest = () => stats()[stats().length - 1];
 
-  // --- Chart Data & Options ---
-  // The logic for chart data and options was already solid.
-  // With correct data coming in, it will now render perfectly.
+  // gradient factory
+  function makeGradient(
+    ctx: CanvasRenderingContext2D,
+    area: any,
+    color: string,
+  ) {
+    const grad = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, color + "00");
+    return grad;
+  }
 
-  const cpuChartData = (): ChartData<"line"> => ({
+  // CPU chart
+  const cpuData = (): ChartData<"line"> => ({
     labels: labels(),
     datasets: [
       {
-        label: "CPU Usage (%)",
-        data: stats().map((s) => s.cpu_total),
+        label: "CPU %",
+        data: stats().map((s) => s.cpu),
         fill: true,
         backgroundColor: (ctx) => {
-          // Area gradient, needs canvas context
-          const chart = ctx.chart;
-          const { ctx: canvas, chartArea } = chart;
-          if (!chartArea) return colors().cpu;
-          const gradient = canvas.createLinearGradient(
-            0,
-            chartArea.top,
-            0,
-            chartArea.bottom,
-          );
-          gradient.addColorStop(0, colors().cpu);
-          gradient.addColorStop(1, colors().card + "00"); // transparent
-          return gradient;
+          const c = ctx.chart;
+          if (!c.chartArea) return C().cpu;
+          return makeGradient(c.ctx, c.chartArea, C().cpu);
         },
-        borderColor: colors().cpu,
-        tension: 0.4,
+        borderColor: C().cpu,
         borderWidth: 2,
+        tension: 0.4,
         pointRadius: 0,
-        yAxisID: "cpu",
+        yAxisID: "y",
       },
     ],
   });
-
-  const cpuChartOptions = (): ChartOptions<"line"> => ({
+  const cpuOpts = (): ChartOptions<"line"> => ({
+    animation: false,
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top" as const,
-        labels: {
-          color: colors().font,
-          font: { size: 12, family: "monospace" },
-        },
-      },
-      tooltip: {
-        mode: "index",
-        intersect: false,
-        backgroundColor: colors().card,
-        titleColor: colors().font,
-        bodyColor: colors().font,
-        borderColor: colors().border,
-        borderWidth: 1,
-      },
-    },
     scales: {
-      x: {
-        grid: { color: colors().border },
-        ticks: { color: colors().axis, font: { size: 12 } },
-      },
-      cpu: {
+      x: { grid: { color: C().border }, ticks: { color: C().font } },
+      y: {
         min: 0,
         max: 100,
-        grid: { color: colors().border },
-        ticks: { color: colors().axis, font: { size: 12 } },
+        grid: { color: C().border },
+        ticks: { color: C().font },
       },
     },
-  });
-
-  const memChartData = (): ChartData<"line"> => ({
-    labels: labels(),
-    datasets: [
-      {
-        label: "Used Mem (MiB)",
-        data: stats().map((s) => s.mem_used / 1024), // Convert KiB to MiB for the chart
-        fill: true,
-        backgroundColor: (ctx) => {
-          const chart = ctx.chart;
-          const { ctx: canvas, chartArea } = chart;
-          if (!chartArea) return colors().memUsed;
-          const gradient = canvas.createLinearGradient(
-            0,
-            chartArea.top,
-            0,
-            chartArea.bottom,
-          );
-          gradient.addColorStop(0, colors().memUsed);
-          gradient.addColorStop(1, colors().card + "00");
-          return gradient;
-        },
-        borderColor: colors().memUsed,
-        tension: 0.45,
-        borderWidth: 2,
-        pointRadius: 0,
-        yAxisID: "mem",
-      },
-      {
-        label: "Free Mem (MiB)",
-        data: stats().map((s) => s.mem_free / 1024), // Convert KiB to MiB for the chart
-        fill: true,
-        backgroundColor: (ctx) => {
-          const chart = ctx.chart;
-          const { ctx: canvas, chartArea } = chart;
-          if (!chartArea) return colors().memFree;
-          const gradient = canvas.createLinearGradient(
-            0,
-            chartArea.top,
-            0,
-            chartArea.bottom,
-          );
-          gradient.addColorStop(0.2, colors().memFree);
-          gradient.addColorStop(1, colors().card + "00");
-          return gradient;
-        },
-        borderColor: colors().memFree,
-        tension: 0.45,
-        borderWidth: 2,
-        pointRadius: 0,
-        yAxisID: "mem",
-      },
-    ],
-  });
-
-  const memChartOptions = (): ChartOptions<"line"> => ({
-    responsive: true,
-    maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: "top" as const,
-        labels: {
-          color: colors().font,
-          font: { size: 12, family: "monospace" },
-        },
-      },
+      legend: { labels: { color: C().font } },
       tooltip: {
-        callbacks: {
-          label(ctx) {
-            const label = ctx.dataset.label || "";
-            const value =
-              typeof ctx.parsed.y === "number"
-                ? ctx.parsed.y.toFixed(2) + " MiB"
-                : ctx.parsed.y;
-            return `${label}: ${value}`;
-          },
-        },
-        backgroundColor: colors().card,
-        titleColor: colors().font,
-        bodyColor: colors().font,
-        borderColor: colors().border,
+        backgroundColor: C().bg,
+        titleColor: C().font,
+        bodyColor: C().font,
+        borderColor: C().border,
         borderWidth: 1,
       },
     },
-    scales: {
-      x: {
-        display: false,
-        grid: { color: colors().border },
-        ticks: { color: colors().axis, font: { size: 12 } },
+  });
+
+  // MEM chart
+  const memData = (): ChartData<"line"> => ({
+    labels: labels(),
+    datasets: [
+      {
+        label: "Used MiB",
+        data: stats().map((s) => (s.memT - s.memF) / 1024),
+        fill: true,
+        backgroundColor: (ctx) => {
+          const c = ctx.chart;
+          if (!c.chartArea) return C().memU;
+          return makeGradient(c.ctx, c.chartArea, C().memU);
+        },
+        borderColor: C().memU,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
       },
-      mem: {
+      {
+        label: "Free MiB",
+        data: stats().map((s) => s.memF / 1024),
+        fill: true,
+        backgroundColor: (ctx) => {
+          const c = ctx.chart;
+          if (!c.chartArea) return C().memF;
+          return makeGradient(c.ctx, c.chartArea, C().memF);
+        },
+        borderColor: C().memF,
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
+  });
+  const memOpts = (): ChartOptions<"line"> => ({
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { display: false, grid: { color: C().border } },
+      y: {
         beginAtZero: true,
-        grid: { color: colors().border },
-        ticks: { color: colors().axis, font: { size: 12 } },
-        // Dynamically set upper bound, rounded up to nearest 100 MiB
-        max:
-          stats().length > 0 && latest()
-            ? Math.ceil(latest()!.mem_total / 1024 / 100) * 100
-            : 100,
+        grid: { color: C().border },
+        ticks: { color: C().font },
+        max: latest()
+          ? Math.ceil(latest()!.memT / 1024 / 100) * 100
+          : undefined,
+      },
+    },
+    plugins: {
+      legend: { labels: { color: C().font } },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const v = ctx.parsed.y as number;
+            return `${ctx.dataset.label}: ${v.toFixed(1)} MiB`;
+          },
+        },
+        backgroundColor: C().bg,
+        titleColor: C().font,
+        borderColor: C().border,
+        borderWidth: 1,
       },
     },
   });
-
-  // --- UI Rendering ---
-  // The JSX structure is clean. The only changes are in the displayed text
-  // to use the corrected `latest()` data and `formatMem` function.
 
   return (
     <section
-      class={`flex flex-col items-center w-full min-h-screen transition-colors duration-90 ${theme() === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
+      class={`p-4 min-h-screen ${isDark() ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
     >
-      <h1 class="text-2xl font-bold mb-2 pt-4">Host Stats Dashboard</h1>
-      <p class="mb-6">Live resource usage (updated in real time)</p>
+      <h1 class="text-2xl mb-4">Host Stats Dashboard</h1>
+      <p class="mb-4">
+        Real-time CPU &amp; Memory (last {HISTORY_LIMIT} ticks)
+      </p>
 
       <Show when={error()}>
         <div
-          class="mb-4 p-2 rounded font-mono w-full max-w-2xl"
+          class="p-2 mb-4 rounded font-mono"
           style={{
-            background: theme() === "dark" ? "#7f1d1d" : "#fee2e2",
-            color: theme() === "dark" ? "#fee2e2" : "#b91c1c",
+            background: isDark() ? "#7f1d1d" : "#fee2e2",
+            color: isDark() ? "#fee2e2" : "#b91c1c",
           }}
         >
           {error()}
         </div>
       </Show>
 
-      <div class="w-full max-w-3xl flex flex-col gap-8">
+      <div class="space-y-8 max-w-3xl mx-auto">
         {/* CPU CARD */}
         <div
-          class={`rounded-lg shadow h-64 flex flex-col justify-between transition-colors duration-100 ${theme() === "dark" ? "bg-gray-800" : "bg-white"}`}
-          style={{
-            border: `1px solid ${colors().border}`,
-          }}
+          class="relative h-64 border rounded-lg"
+          style={{ border: C().border, background: C().cardBg }}
         >
           <div
-            class="text-xs font-semibold mb-1 pl-3 pt-2"
-            style={{ color: colors().axis }}
+            class="absolute top-2 left-4 text-xs"
+            style={{ color: C().font }}
           >
-            CPU Usage (%) · Last {HISTORY_LIMIT} samples
+            CPU Usage (%)
           </div>
-          <div class="flex-1 relative">
-            <Line data={cpuChartData()} options={cpuChartOptions()} />
+          <div class="chart-wrapper absolute inset-0 pt-6 pb-6 px-4">
+            <Line data={cpuData()} options={cpuOpts()} />
           </div>
-          <div class="flex justify-between items-baseline px-6 pb-2 pt-1 text-sm font-mono">
-            <span>
-              Usage:{" "}
-              <span class="font-bold">
-                {latest() ? latest()!.cpu_total.toFixed(1) : "--"}%
-              </span>
-            </span>
+          <div
+            class="absolute bottom-2 left-4 text-sm font-mono"
+            style={{ color: C().font }}
+          >
+            {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
           </div>
         </div>
+
         {/* MEMORY CARD */}
         <div
-          class={`rounded-lg shadow h-64 flex flex-col justify-between transition-colors duration-100 ${theme() === "dark" ? "bg-gray-800" : "bg-white"}`}
-          style={{
-            border: `1px solid ${colors().border}`,
-          }}
+          class="relative h-64 border rounded-lg"
+          style={{ border: C().border, background: C().cardBg }}
         >
           <div
-            class="text-xs font-semibold mb-1 pl-3 pt-2"
-            style={{ color: colors().axis }}
+            class="absolute top-2 left-4 text-xs"
+            style={{ color: C().font }}
           >
-            Memory · Last {HISTORY_LIMIT} samples
+            Memory (MiB)
           </div>
-          <div class="flex-1 relative">
-            <Line data={memChartData()} options={memChartOptions()} />
+          <div class="chart-wrapper absolute inset-0 pt-6 pb-6 px-4">
+            <Line data={memData()} options={memOpts()} />
           </div>
-          <div class="flex justify-between items-baseline px-6 pb-2 pt-1 text-sm font-mono">
-            <span>
-              Used:{" "}
-              <span class="font-bold">
-                {latest()
-                  ? `${formatMem(latest()!.mem_used)} / ${formatMem(latest()!.mem_total)}`
-                  : "-- / --"}
-              </span>
-            </span>
-            <span class="opacity-60">
-              Free: {latest() ? formatMem(latest()!.mem_free) : "--"}
-            </span>
+          <div
+            class="absolute bottom-2 left-4 text-sm font-mono"
+            style={{ color: C().font }}
+          >
+            {latest()
+              ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
+              : "--/--"}
+          </div>
+          <div
+            class="absolute bottom-2 right-4 text-sm font-mono opacity-60"
+            style={{ color: C().font }}
+          >
+            {latest() ? formatMem(latest()!.memF) : "--"}
           </div>
         </div>
       </div>
