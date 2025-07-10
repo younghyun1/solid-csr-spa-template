@@ -1,7 +1,7 @@
 #!/bin/sh
 npm run build
 rm -rf ../rust-be-template/fe/*
-find ./dist -type f -exec zstd --ultra -22 -f -o {}.zst {} \;
+find ./dist -type f ! -iname '*.png' ! -iname '*.jpg' -exec zstd --ultra -22 -f -o {}.zst {} \;
 
 cd ./dist
 find . -type f -name '*.zst' | while read file; do
