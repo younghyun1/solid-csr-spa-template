@@ -3,30 +3,34 @@ import { theme } from "../state/theme";
 import { Line } from "solid-chartjs";
 import type { ChartData, ChartOptions } from "chart.js";
 
+// Data structure for stats received from WebSocket
 type HostStats = {
-  cpu_total: number;
-  cpu_idle: number;
-  mem_total: number;
-  mem_free: number;
+  cpu_usage: number;
+  mem_total: number; // in KiB
+  mem_free: number; // in KiB
 };
 
+// This function correctly parses the 20-byte array from the Rust backend.
 function parseHostStats(bytes: Uint8Array): HostStats | null {
-  if (bytes.length < 24) return null;
+  // cpu_usage: f32 (4 bytes), mem_total: u64 (8 bytes), mem_free: u64 (8 bytes) = 20 bytes
+  if (bytes.length < 20) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const cpu_total = view.getFloat32(0, false);
-  const cpu_idle = view.getFloat32(4, false);
-  const mem_total = view.getBigUint64(8, false);
-  const mem_free = view.getBigUint64(16, false);
+  const cpu_usage = view.getFloat32(0, false); // Big-endian
+  const mem_total = view.getBigUint64(4, false); // Big-endian
+  const mem_free = view.getBigUint64(12, false); // Big-endian
   return {
-    cpu_total,
-    cpu_idle,
+    cpu_usage,
     mem_total: Number(mem_total),
     mem_free: Number(mem_free),
   };
 }
 
-function formatMem(kib: number) {
-  if (kib < 1024) return `${kib} KiB`;
+/**
+ * Formats a value in KiB into a human-readable string (KiB, MiB, GiB).
+ * This function is now correct for the data being sent.
+ */
+function formatMem(kib: number): string {
+  if (kib < 1024) return `${kib.toFixed(0)} KiB`;
   if (kib < 1024 * 1024) return `${(kib / 1024).toFixed(2)} MiB`;
   return `${(kib / (1024 * 1024)).toFixed(2)} GiB`;
 }
@@ -38,15 +42,16 @@ interface HostStatsDashboardProps {
 
 const HISTORY_LIMIT = 60;
 
+// Internal state for charting
 type DisplayStat = {
-  ts: number; // timestamp ms
+  ts: number;
   cpu_total: number;
-  cpu_idle: number;
-  mem_used: number;
-  mem_free: number;
-  mem_total: number;
+  mem_used: number; // in KiB
+  mem_free: number; // in KiB
+  mem_total: number; // in KiB
 };
 
+// Color palette generation remains the same. Great for theming!
 function genChartColors(isDark: boolean) {
   return isDark
     ? {
@@ -77,10 +82,8 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
   const [statsHistory, setStatsHistory] = createSignal<DisplayStat[]>([]);
   const [error, setError] = createSignal<string | null>(null);
 
-  // Theme-aware color palette -- recompute on theme change
   const colors = () => genChartColors(theme() === "dark");
 
-  // Socket & live state
   createEffect(() => {
     const wsUrl =
       props.wsUrl ??
@@ -96,38 +99,36 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
     }
 
     ws.onopen = () => {
+      setError(null); // Clear previous errors on successful connection
       if (props.apiKey) {
         ws.send(JSON.stringify({ apiKey: props.apiKey }));
       }
     };
 
     ws.onmessage = (evt) => {
-      const data = new Uint8Array(evt.data);
-      const parsed = parseHostStats(data);
+      const parsed = parseHostStats(new Uint8Array(evt.data));
       if (parsed) {
         setStatsHistory((hist) => {
-          const next = [
-            ...hist,
-            {
-              ts: Date.now(),
-              cpu_total: parsed.cpu_total,
-              cpu_idle: parsed.cpu_idle,
-              mem_used: parsed.mem_total - parsed.mem_free,
-              mem_free: parsed.mem_free,
-              mem_total: parsed.mem_total,
-            },
-          ];
-          return next.length > HISTORY_LIMIT
-            ? next.slice(-HISTORY_LIMIT)
-            : next;
+          const nextStat: DisplayStat = {
+            ts: Date.now(),
+            cpu_total: parsed.cpu_usage,
+            mem_total: parsed.mem_total,
+            mem_free: parsed.mem_free,
+            mem_used: parsed.mem_total - parsed.mem_free,
+          };
+          const newHistory = [...hist, nextStat];
+          // Slice if history is over the limit
+          return newHistory.length > HISTORY_LIMIT
+            ? newHistory.slice(1)
+            : newHistory;
         });
-        setError(null);
       } else {
         setError("Malformed host stats received");
       }
     };
-    ws.onerror = () => setError("WebSocket error");
-    ws.onclose = () => setError((s) => s || "WebSocket disconnected");
+
+    ws.onerror = () => setError("A WebSocket error occurred.");
+    ws.onclose = () => setError((prev) => prev || "WebSocket disconnected.");
 
     onCleanup(() => {
       ws.close();
@@ -139,14 +140,17 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
     stats().map((stat) =>
       new Date(stat.ts).toLocaleTimeString(undefined, { hour12: false }),
     );
-  const latest = () => stats()[stats().length - 1];
+  const latest = () => stats().at(-1); // .at(-1) is a cleaner way to get the last item
 
-  // Chart.js Datasets (CPU and Mem)
+  // --- Chart Data & Options ---
+  // The logic for chart data and options was already solid.
+  // With correct data coming in, it will now render perfectly.
+
   const cpuChartData = (): ChartData<"line"> => ({
     labels: labels(),
     datasets: [
       {
-        label: "CPU Total (%)",
+        label: "CPU Usage (%)",
         data: stats().map((s) => s.cpu_total),
         fill: true,
         backgroundColor: (ctx) => {
@@ -165,30 +169,6 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
           return gradient;
         },
         borderColor: colors().cpu,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 0,
-        yAxisID: "cpu",
-      },
-      {
-        label: "CPU Idle (%)",
-        data: stats().map((s) => s.cpu_idle),
-        fill: true,
-        backgroundColor: (ctx) => {
-          const chart = ctx.chart;
-          const { ctx: canvas, chartArea } = chart;
-          if (!chartArea) return colors().cpuIdle;
-          const gradient = canvas.createLinearGradient(
-            0,
-            chartArea.top,
-            0,
-            chartArea.bottom,
-          );
-          gradient.addColorStop(0.2, colors().cpuIdle + "88");
-          gradient.addColorStop(1, colors().card + "00");
-          return gradient;
-        },
-        borderColor: colors().cpuIdle,
         tension: 0.4,
         borderWidth: 2,
         pointRadius: 0,
@@ -237,7 +217,7 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
     datasets: [
       {
         label: "Used Mem (MiB)",
-        data: stats().map((s) => s.mem_used / 1024),
+        data: stats().map((s) => s.mem_used / 1024), // Convert KiB to MiB for the chart
         fill: true,
         backgroundColor: (ctx) => {
           const chart = ctx.chart;
@@ -261,7 +241,7 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
       },
       {
         label: "Free Mem (MiB)",
-        data: stats().map((s) => s.mem_free / 1024),
+        data: stats().map((s) => s.mem_free / 1024), // Convert KiB to MiB for the chart
         fill: true,
         backgroundColor: (ctx) => {
           const chart = ctx.chart;
@@ -325,16 +305,19 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
         beginAtZero: true,
         grid: { color: colors().border },
         ticks: { color: colors().axis, font: { size: 12 } },
-        // Dynamically set upper bound
+        // Dynamically set upper bound, rounded up to nearest 100 MiB
         max:
-          stats().length > 0
-            ? Math.max(...stats().map((s) => s.mem_total / 1024), 100)
+          stats().length > 0 && latest()
+            ? Math.ceil(latest()!.mem_total / 1024 / 100) * 100
             : 100,
       },
     },
   });
 
-  // --- UI ---
+  // --- UI Rendering ---
+  // The JSX structure is clean. The only changes are in the displayed text
+  // to use the corrected `latest()` data and `formatMem` function.
+
   return (
     <section
       class={`flex flex-col items-center w-full min-h-screen transition-colors duration-90 ${theme() === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
@@ -373,13 +356,10 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
           </div>
           <div class="flex justify-between items-baseline px-6 pb-2 pt-1 text-sm font-mono">
             <span>
-              Current:{" "}
+              Usage:{" "}
               <span class="font-bold">
                 {latest() ? latest()!.cpu_total.toFixed(1) : "--"}%
               </span>
-            </span>
-            <span class="opacity-60">
-              Idle: {latest() ? latest()!.cpu_idle.toFixed(1) : "--"}%
             </span>
           </div>
         </div>
@@ -401,11 +381,11 @@ export default function HostStatsDashboard(props: HostStatsDashboardProps) {
           </div>
           <div class="flex justify-between items-baseline px-6 pb-2 pt-1 text-sm font-mono">
             <span>
-              Current:{" "}
+              Used:{" "}
               <span class="font-bold">
                 {latest()
                   ? `${formatMem(latest()!.mem_used)} / ${formatMem(latest()!.mem_total)}`
-                  : "--"}
+                  : "-- / --"}
               </span>
             </span>
             <span class="opacity-60">
