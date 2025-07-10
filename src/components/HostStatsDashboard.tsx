@@ -18,11 +18,16 @@ function parseHostStats(buf: ArrayBuffer): HostStatsRaw | null {
   const mem_free = Number(dv.getBigUint64(12, false));
   return { cpu_usage, mem_total, mem_free };
 }
-
 function formatMem(kib: number): string {
+  // Cope with potentially very large numbers from broken source data
+  if (!isFinite(kib) || kib < 0) return "--";
+  // Cap at something sensible, e.g., 1 PiB displayed as max
+  if (kib > 1024 ** 5) return ">1 PiB";
   if (kib < 1024) return `${kib.toFixed(0)} KiB`;
   if (kib < 1024 * 1024) return `${(kib / 1024).toFixed(1)} MiB`;
-  return `${(kib / (1024 * 1024)).toFixed(1)} GiB`;
+  if (kib < 1024 * 1024 * 1024)
+    return `${(kib / (1024 * 1024)).toFixed(1)} GiB`;
+  return `${(kib / (1024 * 1024 * 1024)).toFixed(2)} TiB`;
 }
 
 const HISTORY_LIMIT = 60;
