@@ -2,11 +2,10 @@ import { onMount, onCleanup, createSignal, Show, For } from "solid-js";
 import { Line } from "solid-chartjs";
 import type { ChartOptions, ChartData } from "chart.js";
 import { theme } from "../state/theme";
-
 type HostStatsRaw = {
   cpu_usage: number; // percent, 0–100
-  mem_total: number; // KiB
-  mem_free: number; // KiB
+  mem_total: number; // bytes
+  mem_free: number; // bytes
 };
 
 // parse exactly 20 bytes: [f32][u64][u64] (all big-endian)
@@ -18,16 +17,13 @@ function parseHostStats(buf: ArrayBuffer): HostStatsRaw | null {
   const mem_free = Number(dv.getBigUint64(12, false));
   return { cpu_usage, mem_total, mem_free };
 }
-function formatMem(kib: number): string {
-  // Cope with potentially very large numbers from broken source data
-  if (!isFinite(kib) || kib < 0) return "--";
-  // Cap at something sensible, e.g., 1 PiB displayed as max
-  if (kib > 1024 ** 5) return ">1 PiB";
-  if (kib < 1024) return `${kib.toFixed(0)} KiB`;
-  if (kib < 1024 * 1024) return `${(kib / 1024).toFixed(1)} MiB`;
-  if (kib < 1024 * 1024 * 1024)
-    return `${(kib / (1024 * 1024)).toFixed(1)} GiB`;
-  return `${(kib / (1024 * 1024 * 1024)).toFixed(2)} TiB`;
+
+function formatMem(bytes: number): string {
+  if (bytes < 1024) return `${bytes.toFixed(0)} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GiB`;
 }
 
 const HISTORY_LIMIT = 60;
