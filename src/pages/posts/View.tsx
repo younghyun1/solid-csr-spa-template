@@ -1,7 +1,7 @@
-import { Show, createSignal, createResource, For } from "solid-js";
+import { Show, createSignal, createResource, For, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { useParams } from "@solidjs/router";
-import { blogApi } from "../../services/all_api";
+import { blogApi, dropdownApi } from "../../services/all_api";
 import { isAuthenticated } from "../../state/auth";
 
 // VoteState Mapping based on Rust Enum:
@@ -16,6 +16,9 @@ export default function PostViewPage() {
   const [commentValue, setCommentValue] = createSignal("");
   const [commentLoading, setCommentLoading] = createSignal(false);
   const [commentError, setCommentError] = createSignal<string | null>(null);
+  const [commentSort, setCommentSort] = createSignal<
+    "best" | "top" | "new" | "old"
+  >("best");
 
   const [postResource, { refetch }] = createResource(postId, async (pid) => {
     if (!pid) return null;
@@ -39,6 +42,45 @@ export default function PostViewPage() {
       }
     >;
   }>({ comments: {} });
+  // Load countries (cached by dropdownApi) and build a lookup for flag/name
+  const [countries] = createResource(
+    async () => await dropdownApi.countryList(),
+  );
+  const countryMap = createMemo(() => {
+    const res: any = countries();
+    const list = Array.isArray(res?.data?.countries)
+      ? res.data.countries
+      : Array.isArray(res?.data)
+        ? res.data
+        : (res?.countries ?? []);
+    const m: Record<number, any> = {};
+    for (const c of list) {
+      m[Number(c.country_code)] = c;
+    }
+    return m;
+  });
+  const formatCountry = (code: any) => {
+    if (code === null || code === undefined) return null;
+    const c = countryMap()[Number(code)];
+    if (!c) return null;
+    const flag = c.country_flag ? c.country_flag + " " : "";
+    const name = c.country_eng_name ?? c.country_name ?? "";
+    return `${flag}${name}`;
+  };
+  // Store for locally added comments (optimistic replies)
+  const [localComments, setLocalComments] = createStore<Record<string, any>>(
+    {},
+  );
+
+  // Per-comment reply state
+  const [replyOpen, setReplyOpen] = createStore<Record<string, boolean>>({});
+  const [replyText, setReplyText] = createStore<Record<string, string>>({});
+  const [replyLoading, setReplyLoading] = createStore<Record<string, boolean>>(
+    {},
+  );
+  const [replyError, setReplyError] = createStore<
+    Record<string, string | null>
+  >({});
 
   const handleVote = async (
     type: "post" | "comment",
@@ -122,9 +164,18 @@ export default function PostViewPage() {
       // Success! The optimistic update is already showing.
       // refetch(); // <-- REMOVED for smoother UX
     } catch (error) {
-      // On error, revert the optimistic update by refetching
       console.error("Vote failed:", error);
-      refetch();
+      // Roll back optimistic update instead of refetching entire post
+      const rollback = {
+        total_upvotes: currentUpvotes,
+        total_downvotes: currentDownvotes,
+        vote_state: currentState as VoteState,
+      };
+      if (type === "post") {
+        setOptimisticVotes("post", rollback);
+      } else if (ids.commentId) {
+        setOptimisticVotes("comments", ids.commentId, rollback);
+      }
     }
   };
 
@@ -152,14 +203,62 @@ export default function PostViewPage() {
     }
   };
 
+  // Reply handlers
+  const toggleReply = (commentId: string) => {
+    const current = !!replyOpen[commentId];
+    setReplyOpen(commentId, !current);
+    if (!current) {
+      setReplyText(commentId, "");
+      setReplyError(commentId, null);
+    }
+  };
+  const handleSubmitReply = async (parentCommentId: string) => {
+    const content = (replyText[parentCommentId] ?? "").trim();
+    if (!content) return;
+    setReplyLoading(parentCommentId, true);
+    setReplyError(parentCommentId, null);
+    try {
+      const res = await blogApi.submitComment(
+        {
+          is_guest: !isAuthenticated(),
+          guest_id: null,
+          guest_password: null,
+          parent_comment_id: parentCommentId,
+          comment_content: content,
+        },
+        postId(),
+      );
+      // Optimistically add the new reply locally so it appears immediately
+      if (res && (res as any).data) {
+        const newComment = (res as any).data;
+        setLocalComments(newComment.comment_id, newComment);
+      }
+      setReplyText(parentCommentId, "");
+      setReplyOpen(parentCommentId, false);
+      // No immediate refetch; the local comment will reconcile on future refetch
+    } catch (err: any) {
+      setReplyError(parentCommentId, err?.message ?? "Failed to submit reply");
+    } finally {
+      setReplyLoading(parentCommentId, false);
+    }
+  };
+
   function buildCommentTree(flatComments: any[]): any[] {
     const commentsById: Record<string, any> = {};
     const roots: any[] = [];
 
-    for (const c of flatComments) {
+    // Merge locally added comments (optimistic replies) without changing existing order
+    const flat = [...flatComments];
+    for (const id in localComments) {
+      if (!flat.find((c) => c.comment_id === id)) {
+        flat.push(localComments[id]);
+      }
+    }
+
+    for (const c of flat) {
       commentsById[c.comment_id] = { ...c, children: [] };
     }
-    for (const c of flatComments) {
+    for (const c of flat) {
       if (c.parent_comment_id && commentsById[c.parent_comment_id]) {
         commentsById[c.parent_comment_id].children.push(
           commentsById[c.comment_id],
@@ -171,6 +270,46 @@ export default function PostViewPage() {
     return roots;
   }
 
+  // Helpers for base-data sorting (ignore optimistic changes to keep order stable)
+  function getBaseCommentState(c: any) {
+    return {
+      up: c.total_upvotes,
+      down: c.total_downvotes,
+      createdAt: new Date(c.comment_created_at).getTime(),
+    };
+  }
+  function compareComments(a: any, b: any) {
+    const sort = commentSort();
+    const A = getBaseCommentState(a);
+    const B = getBaseCommentState(b);
+    switch (sort) {
+      case "best": {
+        const sa = A.up - A.down;
+        const sb = B.up - B.down;
+        if (sb !== sa) return sb - sa;
+        return B.createdAt - A.createdAt; // tie-break by newer first
+      }
+      case "top": {
+        if (B.up !== A.up) return B.up - A.up;
+        return B.createdAt - A.createdAt;
+      }
+      case "new":
+        return B.createdAt - A.createdAt;
+      case "old":
+        return A.createdAt - B.createdAt;
+      default:
+        return 0;
+    }
+  }
+  function sortCommentsTree(nodes: any[]): any[] {
+    const copy = nodes.map((n) => ({
+      ...n,
+      children:
+        n.children && n.children.length > 0 ? sortCommentsTree(n.children) : [],
+    }));
+    copy.sort(compareComments);
+    return copy;
+  }
   function renderComments(comments: any[], depth = 0) {
     return (
       <For each={comments}>
@@ -191,7 +330,14 @@ export default function PostViewPage() {
               style={{ "margin-left": `${depth * 24}px` }}
             >
               <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
-                <span class="font-bold">{comment.user_id ?? "Guest"}</span>
+                <span class="font-bold">
+                  {(comment as any).user_name ?? "Guest"}
+                </span>
+                <Show when={formatCountry((comment as any).user_country)}>
+                  <span class="ml-2 text-[0.75rem] text-gray-500 dark:text-gray-400">
+                    ({formatCountry((comment as any).user_country)})
+                  </span>
+                </Show>
                 <span class="ml-3 text-xs">
                   {new Date(comment.comment_created_at).toLocaleString()}
                 </span>
@@ -201,7 +347,7 @@ export default function PostViewPage() {
               </div>
               <div class="flex items-center gap-2 mt-2 mb-1">
                 <button
-                  class={`text-lg px-1 ${voteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                  class={`text-lg px-1 ${voteState() === 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
                   onClick={() =>
                     handleVote("comment", true, {
                       postId: postId(),
@@ -212,14 +358,14 @@ export default function PostViewPage() {
                 >
                   ▲
                 </button>
-                <span class="text-sm text-green-700 dark:text-green-400">
+                <span class="text-sm text-emerald-700 dark:text-emerald-400">
                   {upvotes()}
                 </span>
-                <span class="text-sm text-red-500">
+                <span class="text-sm text-rose-600 dark:text-rose-400">
                   {downvotes() > 0 ? `-${downvotes()}` : 0}
                 </span>
                 <button
-                  class={`text-lg px-1 ${voteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                  class={`text-lg px-1 ${voteState() === 1 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-gray-500 hover:text-rose-600 dark:hover:text-rose-400"}`}
                   onClick={() =>
                     handleVote("comment", false, {
                       postId: postId(),
@@ -231,6 +377,56 @@ export default function PostViewPage() {
                   ▼
                 </button>
               </div>
+              <div class="mt-1">
+                <button
+                  class="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  onClick={() => toggleReply(comment.comment_id)}
+                >
+                  Reply
+                </button>
+              </div>
+              <Show when={replyOpen[comment.comment_id]}>
+                <div class="mt-2">
+                  <textarea
+                    class="w-full min-h-[80px] border rounded p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
+                    value={replyText[comment.comment_id] ?? ""}
+                    onInput={(e) =>
+                      setReplyText(comment.comment_id, e.currentTarget.value)
+                    }
+                    placeholder="Write a reply..."
+                  />
+                  <Show when={replyError[comment.comment_id]}>
+                    <div class="text-sm text-red-600">
+                      {replyError[comment.comment_id]}
+                    </div>
+                  </Show>
+                  <div class="mt-2 flex items-center gap-2">
+                    <button
+                      class="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold disabled:opacity-60"
+                      disabled={
+                        replyLoading[comment.comment_id] ||
+                        !(replyText[comment.comment_id] ?? "").trim()
+                      }
+                      onClick={() => handleSubmitReply(comment.comment_id)}
+                    >
+                      {replyLoading[comment.comment_id]
+                        ? "Posting..."
+                        : "Submit Reply"}
+                    </button>
+                    <button
+                      type="button"
+                      class="px-3 py-1 rounded text-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                      onClick={() => {
+                        setReplyOpen(comment.comment_id, false);
+                        setReplyText(comment.comment_id, "");
+                        setReplyError(comment.comment_id, null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </Show>
               {comment.children &&
                 comment.children.length > 0 &&
                 renderComments(comment.children, depth + 1)}
@@ -261,13 +457,16 @@ export default function PostViewPage() {
             const postDownvotes = () =>
               optimisticVotes.post?.total_downvotes ??
               data().post.total_downvotes;
+            const sortedComments = createMemo(() =>
+              sortCommentsTree(buildCommentTree(data().comments || [])),
+            );
 
             return (
               <>
                 <div class="mb-4 flex flex-row items-start gap-4">
                   <div class="flex flex-col items-center pr-4 select-none border-r border-gray-300 dark:border-gray-700 mr-2">
                     <button
-                      class={`text-2xl transition ${postVoteState() === 0 ? "text-green-500 font-bold" : "text-gray-400 hover:text-green-500"}`}
+                      class={`text-2xl transition ${postVoteState() === 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
                       onClick={() =>
                         handleVote("post", true, {
                           postId: data().post.post_id,
@@ -277,14 +476,14 @@ export default function PostViewPage() {
                     >
                       ▲
                     </button>
-                    <span class="text-base font-semibold text-center min-w-[2ch] my-1">
+                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-emerald-700 dark:text-emerald-400">
                       {postUpvotes()}
                     </span>
-                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-red-500">
+                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-rose-600 dark:text-rose-400">
                       {postDownvotes() > 0 ? `-${postDownvotes()}` : 0}
                     </span>
                     <button
-                      class={`text-2xl transition ${postVoteState() === 1 ? "text-red-500 font-bold" : "text-gray-400 hover:text-red-500"}`}
+                      class={`text-2xl transition ${postVoteState() === 1 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-gray-500 hover:text-rose-600 dark:hover:text-rose-400"}`}
                       onClick={() =>
                         handleVote("post", false, {
                           postId: data().post.post_id,
@@ -300,7 +499,17 @@ export default function PostViewPage() {
                       {data().post.post_title}
                     </h1>
                     <div class="flex items-center text-sm text-gray-400 mb-2">
-                      <span>
+                      <span class="text-gray-700 dark:text-gray-300">
+                        {(data().post as any).user_name ?? "Unknown"}
+                      </span>
+                      <Show
+                        when={formatCountry((data().post as any).user_country)}
+                      >
+                        <span class="ml-2">
+                          ({formatCountry((data().post as any).user_country)})
+                        </span>
+                      </Show>
+                      <span class="ml-3">
                         {new Date(data().post.post_created_at).toLocaleString()}
                       </span>
                     </div>
@@ -312,8 +521,31 @@ export default function PostViewPage() {
                 </div>
                 <hr class="my-5" />
                 <section>
-                  <h2 class="text-xl font-semibold mb-3">Comments</h2>
-                  {renderComments(buildCommentTree(data().comments || []))}
+                  <div class="mb-3 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold">Comments</h2>
+                    <label class="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                      <span>Sort by</span>
+                      <select
+                        class="px-2 py-1 rounded border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
+                        value={commentSort()}
+                        onChange={(e) =>
+                          setCommentSort(
+                            e.currentTarget.value as
+                              | "best"
+                              | "top"
+                              | "new"
+                              | "old",
+                          )
+                        }
+                      >
+                        <option value="best">Best</option>
+                        <option value="top">Top</option>
+                        <option value="new">New</option>
+                        <option value="old">Old</option>
+                      </select>
+                    </label>
+                  </div>
+                  {renderComments(sortedComments())}
                 </section>
                 <hr class="my-5" />
                 <section>

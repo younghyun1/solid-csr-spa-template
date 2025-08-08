@@ -60,11 +60,17 @@ export default function NewPostPage() {
             onInput={(e) => setTags(e.currentTarget.value)}
             class="px-3 py-2 rounded border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
           />
-          <div class="w-full min-w-[700px] h-96">
+          <div class="w-full h-[28rem] min-w-0">
             <label class="font-medium text-gray-700 dark:text-gray-200 mb-2 block">
               Content (Markdown)
             </label>
-            <MarkdownEditor value={body()} onChange={setBody} />
+            <div class="h-full overflow-hidden">
+              <MarkdownEditor
+                value={body()}
+                onChange={setBody}
+                options={{ minHeight: "100%" }}
+              />
+            </div>
           </div>
           {error() && <div class="text-red-600">{error()}</div>}
           <button

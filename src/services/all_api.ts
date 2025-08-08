@@ -44,7 +44,43 @@ async function post<T = any>(
   };
   const res = await apiFetch(url, fetchOpts);
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  // Handle 204/empty-body responses gracefully for side-effect endpoints (e.g., vote rescinds)
+  if (res.status === 204) {
+    return undefined as unknown as T;
+  }
+  const contentLength = res.headers.get("content-length");
+  if (contentLength === "0") {
+    return undefined as unknown as T;
+  }
+  try {
+    return await res.json();
+  } catch {
+    return undefined as unknown as T;
+  }
+}
+
+/**
+ * Generic HTTP DELETE
+ */
+async function del<T = any>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const url = interpolate(path, options.params);
+  const res = await apiFetch(url, { ...options, method: "DELETE" });
+  if (!res.ok) throw new Error(await res.text());
+  if (res.status === 204) {
+    return undefined as unknown as T;
+  }
+  const contentLength = res.headers.get("content-length");
+  if (contentLength === "0") {
+    return undefined as unknown as T;
+  }
+  try {
+    return await res.json();
+  } catch {
+    return undefined as unknown as T;
+  }
 }
 
 /**
@@ -61,7 +97,14 @@ export const dropdownApi = {
     await get(`/api/dropdown/language/{language_id}`, {
       params: { language_id },
     }),
-  countryList: async () => await get("/api/dropdown/country"),
+  countryList: (function () {
+    let cache: any | null = null;
+    return async () => {
+      if (cache) return cache;
+      cache = await get("/api/dropdown/country");
+      return cache;
+    };
+  })(),
   country: async (country_id: string | number) =>
     await get("/api/dropdown/country/{country_id}", { params: { country_id } }),
   countrySubdivisions: async (country_id: string | number) =>
@@ -129,13 +172,22 @@ export const authApi = {
   },
   logout: async () =>
     await post<ApiResponse<LogoutResponse>>("/api/auth/logout"),
+  uploadProfilePicture: async (body: FormData) =>
+    await apiFetch("/api/user/profile-picture", {
+      method: "POST",
+      body,
+      credentials: "include",
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }),
 };
 
 export const userApi = {
   uploadProfilePicture: async (body: FormData) =>
     await apiFetch("/api/user/upload-profile-picture", {
       method: "POST",
-      body, // Do not stringify FormData
+      body,
       credentials: "include",
     }).then(async (res) => {
       if (!res.ok) throw new Error(await res.text());
@@ -187,11 +239,11 @@ export const blogApi = {
       { body, params: { post_id, comment_id } },
     ),
   rescindPostVote: async (post_id: string) =>
-    await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
+    await del<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
       params: { post_id },
     }),
   rescindCommentVote: async (post_id: string, comment_id: string) =>
-    await post<ApiResponse<VoteCommentResponse>>(
+    await del<ApiResponse<VoteCommentResponse>>(
       "/api/blog/{post_id}/{comment_id}/vote",
       { params: { post_id, comment_id } },
     ),
@@ -226,7 +278,7 @@ export const visitorBoardApi = {
   getVisitorBoard: async () => await get("/api/visitor-board"),
 };
 
-export { get, post, interpolate };
+export { get, post, del, interpolate };
 
 /**
  * Usage Example:

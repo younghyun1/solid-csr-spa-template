@@ -37,7 +37,45 @@ main {
     border-left-color: #e2e8f0; /* gray-300 */
 }
 .chart-wrapper {
-  position: absolute;
-  inset: 0;
+    position: absolute;
+    inset: 0;
 }
 
+/* EasyMDE layout: constrain to container height and make editor scroll instead of expanding */
+.EasyMDEContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0; /* allow flex children to shrink */
+}
+.EasyMDEContainer .editor-toolbar {
+    flex: 0 0 auto;
+}
+.EasyMDEContainer .CodeMirror {
+    flex: 1 1 auto;
+    height: auto !important; /* allow flex to control height */
+    min-height: 0;
+}
+.EasyMDEContainer .CodeMirror-scroll {
+    height: 100% !important;
+    overflow: auto !important; /* scroll inside editor instead of growing */
+}
+.EasyMDEContainer .editor-preview,
+.EasyMDEContainer .editor-preview-side {
+    height: 100%;
+    overflow: auto;
+}
+
+/* Dark theme tweaks to improve contrast and consistency */
+.easymde-dark .editor-toolbar {
+    background: #111827; /* gray-900 */
+}
+.easymde-dark .CodeMirror-gutters {
+    background: #1f2937; /* gray-800 */
+    border-right-color: #374151; /* gray-700 */
+}
+.easymde-dark .editor-preview,
+.easymde-dark .editor-preview-side {
+    background: #111827; /* gray-900 */
+    color: #e5e7eb; /* gray-200 */
+}
