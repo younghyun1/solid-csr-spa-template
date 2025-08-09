@@ -140,11 +140,13 @@ const TopBar = () => (
           </span>
         </div>
         <div class="relative">
-          <a
-            href="/edit-profile"
-            class="profile-picture focus:outline-none"
-            aria-label="Edit profile"
+          <button
+            class="menu-toggle profile-picture focus:outline-none"
+            aria-label="Open user menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen() ? "true" : "false"}
             tabIndex={0}
+            onClick={handleMenuToggle}
           >
             <img
               src={
@@ -154,26 +156,26 @@ const TopBar = () => (
               alt="User"
               class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover transition ring-2 ring-transparent hover:ring-blue-500"
             />
-          </a>
-          <button
-            class="menu-toggle focus:outline-none"
-            aria-label="User menu"
-            tabIndex={0}
-            onClick={handleMenuToggle}
-          >
-            <svg
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
           </button>
           <Show when={menuOpen()}>
             <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-90">
+              <a
+                href="/edit-profile"
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 hover:dark:bg-gray-800 rounded flex items-center gap-2 transition-colors duration-90"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
+                </svg>
+                Edit Profile
+              </a>
               <button
                 class="w-full text-left px-4 py-2 hover:bg-gray-100 hover:dark:bg-gray-800 rounded flex items-center gap-2 transition-colors duration-90"
                 onClick={handleLogout}
