@@ -10,14 +10,12 @@ import { authApi } from "../services/all_api";
 
 const [menuOpen, setMenuOpen] = createSignal(false);
 
-const handleProfileClick = (e: MouseEvent) => {
+const handleMenuToggle = (e: MouseEvent) => {
   e.preventDefault();
   setMenuOpen((open) => !open);
   // Close on click-outside:
   const handleClickOutside = (event: MouseEvent) => {
-    if (
-      !(event.target as HTMLElement).closest(".profile-menu, .profile-picture")
-    ) {
+    if (!(event.target as HTMLElement).closest(".profile-menu, .menu-toggle")) {
       setMenuOpen(false);
       window.removeEventListener("mousedown", handleClickOutside);
     }
@@ -142,11 +140,11 @@ const TopBar = () => (
           </span>
         </div>
         <div class="relative">
-          <button
+          <a
+            href="/edit-profile"
             class="profile-picture focus:outline-none"
-            aria-label="User menu"
+            aria-label="Edit profile"
             tabIndex={0}
-            onClick={handleProfileClick}
           >
             <img
               src={
@@ -156,6 +154,23 @@ const TopBar = () => (
               alt="User"
               class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover transition ring-2 ring-transparent hover:ring-blue-500"
             />
+          </a>
+          <button
+            class="menu-toggle focus:outline-none"
+            aria-label="User menu"
+            tabIndex={0}
+            onClick={handleMenuToggle}
+          >
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
           </button>
           <Show when={menuOpen()}>
             <div class="profile-menu absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded shadow-lg py-1 z-50 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-90">
