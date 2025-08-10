@@ -1,7 +1,13 @@
-import { createSignal, Show, onCleanup } from "solid-js";
+import {
+  createSignal,
+  Show,
+  onCleanup,
+  createResource,
+  createMemo,
+} from "solid-js";
 import { uploadWithProgress } from "../services/upload_with_progress";
 import { user, setUser } from "../state/auth";
-import { authApi } from "../services/all_api";
+import { authApi, dropdownApi } from "../services/all_api";
 
 const MAX_SIZE_OF_UPLOADABLE_PROFILE_PICTURE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME_TYPES: string[] = [
@@ -34,6 +40,93 @@ function EditProfilePage() {
   const [selectedPreviewUrl, setSelectedPreviewUrl] = createSignal<
     string | null
   >(null);
+
+  const userCountryId = () => user()?.user_info?.user_country;
+  const userSubdivisionId = () => user()?.user_info?.user_subdivision;
+
+  // Load dropdown caches/resources
+  const [countries] = createResource(
+    async () => await dropdownApi.countryList(),
+  );
+  const [languages] = createResource(
+    async () => await dropdownApi.languageList(),
+  );
+  const [subdivisions] = createResource(userCountryId, async (cid) => {
+    if (cid === null || cid === undefined) return [];
+    try {
+      const res: any = await dropdownApi.countrySubdivisions(Number(cid));
+      if (Array.isArray(res?.data)) return res.data;
+      if (Array.isArray(res)) return res;
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Build lookup maps
+  const countryMap = createMemo(() => {
+    const res: any = countries();
+    const list = Array.isArray(res?.data?.countries)
+      ? res.data.countries
+      : Array.isArray(res?.data)
+        ? res.data
+        : (res?.countries ?? []);
+    const m: Record<number, any> = {};
+    for (const c of list) {
+      m[Number(c.country_code)] = c;
+    }
+    return m;
+  });
+  const languageMap = createMemo(() => {
+    const res: any = languages();
+    const list = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+        ? res
+        : [];
+    const m: Record<number, any> = {};
+    for (const l of list) {
+      m[Number(l.language_code)] = l;
+    }
+    return m;
+  });
+  const subdivisionMap = createMemo(() => {
+    const res: any = subdivisions();
+    const list = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+        ? res
+        : [];
+    const m: Record<number, any> = {};
+    for (const s of list) {
+      m[Number(s.subdivision_id)] = s;
+    }
+    return m;
+  });
+
+  // Formatters
+  const formatCountry = (code: any) => {
+    if (code === null || code === undefined) return "";
+    const c = countryMap()[Number(code)];
+    if (!c) return String(code);
+    const flag = c.country_flag ? c.country_flag + " " : "";
+    const name = c.country_eng_name ?? c.country_name ?? "";
+    return `${flag}${name || code}`.trim();
+  };
+  const formatLanguage = (code: any) => {
+    if (code === null || code === undefined) return "";
+    const l = languageMap()[Number(code)];
+    if (!l) return String(code);
+    return l.language_eng_name ?? l.language_name ?? String(code);
+  };
+  const formatSubdivision = (id: any) => {
+    if (id === null || id === undefined) return "No Subdivision / N/A";
+    const s = subdivisionMap()[Number(id)];
+    if (!s) return String(id);
+    return s.subdivision_name ?? String(id);
+  };
+
+  let fileInputRef: HTMLInputElement | undefined;
 
   onCleanup(() => {
     const url = selectedPreviewUrl();
@@ -73,6 +166,15 @@ function EditProfilePage() {
         return URL.createObjectURL(file);
       });
     }
+  };
+
+  const clearSelection = () => {
+    setProfileImage(null);
+    setSelectedPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setError(null);
   };
 
   const handleUpload = async () => {
@@ -124,74 +226,182 @@ function EditProfilePage() {
   };
 
   return (
-    <div class="edit-profile-page">
-      <h2>Edit Profile</h2>
-      <div class="profile-picture-section">
-        <img
-          src={
-            selectedPreviewUrl() ||
-            profilePicUrl() ||
-            user()?.user_profile_picture?.user_profile_picture_link ||
-            "/default-profile.png"
-          }
-          alt="Profile"
-          style={{
-            width: "120px",
-            height: "120px",
-            "border-radius": "60px",
-            "object-fit": "cover",
-          }}
-        />
+    <section class="px-4 py-8 md:py-10 bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-100 transition-colors duration-100 min-h-[60vh]">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Edit Profile</h1>
+
+        <div class="space-y-10">
+          <section>
+            <h2 class="text-lg font-semibold">Change Profile Picture</h2>
+            <hr class="my-3 border-gray-200 dark:border-gray-800" />
+            <div class="flex items-start gap-6">
+              <div class="w-32 h-32 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-700 shadow">
+                <img
+                  src={
+                    selectedPreviewUrl() ||
+                    profilePicUrl() ||
+                    user()?.user_profile_picture?.user_profile_picture_link ||
+                    "/default-profile.png"
+                  }
+                  alt="Profile"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+              <div class="flex-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  class="hidden"
+                />
+
+                <div class="flex gap-2 mt-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef?.click()}
+                    disabled={uploading()}
+                    class="px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-60"
+                  >
+                    Choose Image
+                  </button>
+
+                  <button
+                    onClick={handleUpload}
+                    disabled={uploading() || !profileImage()}
+                    class="px-4 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-60"
+                  >
+                    {uploading() ? "Uploading..." : "Upload"}
+                  </button>
+                </div>
+
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  Common formats (PNG, JPG, GIF, WEBP). Max 10MB.
+                </div>
+
+                <Show when={uploading()}>
+                  <div class="w-full mt-4">
+                    <div class="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        class="h-full bg-blue-600 transition-all"
+                        style={{ width: `${progress()}%` }}
+                      />
+                    </div>
+                    <div class="text-xs mt-1 text-gray-600 dark:text-gray-300">
+                      {progress()}%
+                    </div>
+                  </div>
+                </Show>
+
+                <Show when={error()}>
+                  <div
+                    class="mt-3 text-sm bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded px-3 py-2"
+                    aria-live="polite"
+                  >
+                    {error()}
+                  </div>
+                </Show>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 class="text-lg font-semibold">Profile Info</h2>
+            <hr class="my-3 border-gray-200 dark:border-gray-800" />
+            <div class="space-y-4">
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Display name
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={user()?.user_info?.user_name ?? ""}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Email
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={user()?.user_info?.user_email ?? ""}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  User ID
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={user()?.user_info?.user_id ?? ""}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Email Verified
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={
+                      user()?.user_info?.user_is_email_verified ? "Yes" : "No"
+                    }
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Country
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={formatCountry(user()?.user_info?.user_country)}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Language
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={formatLanguage(user()?.user_info?.user_language)}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-12 items-center gap-3">
+                <div class="col-span-4 text-sm text-gray-600 dark:text-gray-300">
+                  Subdivision
+                </div>
+                <div class="col-span-8">
+                  <input
+                    disabled
+                    value={formatSubdivision(
+                      user()?.user_info?.user_subdivision,
+                    )}
+                    class="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-      <div class="upload-section">
-        <input type="file" accept="image/*" onChange={handleFileChange} />
-        <button
-          onClick={handleUpload}
-          disabled={uploading() || !profileImage()}
-        >
-          {uploading() ? "Uploading..." : "Upload Profile Picture"}
-        </button>
-        <Show when={uploading()}>
-          <div
-            class="progress-bar"
-            style={{
-              width: "100%",
-              "margin-top": "12px",
-              background: "#f0f0f0",
-              "border-radius": "4px",
-              height: "10px",
-              position: "relative",
-            }}
-          >
-            <div
-              class="progress"
-              style={{
-                width: `${progress()}%`,
-                height: "100%",
-                background: "#3b82f6",
-                "border-radius": "4px",
-                transition: "width 0.2s",
-              }}
-            ></div>
-            <span
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                "font-size": "12px",
-                color: "#333",
-              }}
-            >
-              {progress()}%
-            </span>
-          </div>
-        </Show>
-        <Show when={error()}>
-          <div class="error-message">{error()}</div>
-        </Show>
-      </div>
-    </div>
+    </section>
   );
 }
 

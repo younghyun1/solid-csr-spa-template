@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, Show, For } from "solid-js";
+import { onMount, onCleanup, createSignal, Show } from "solid-js";
 import { Line } from "solid-chartjs";
 import type { ChartOptions, ChartData } from "chart.js";
 import { theme } from "../state/theme";
@@ -105,10 +105,14 @@ export default function HostStatsDashboard(props: {
 
   // convenience
   const stats = () => history();
-  const labels = () =>
-    stats().map((s) =>
+  const labels = () => {
+    const s = stats();
+    const blanks = Array(Math.max(0, HISTORY_LIMIT - s.length)).fill("");
+    const times = s.map((s) =>
       new Date(s.ts).toLocaleTimeString(undefined, { hour12: false }),
     );
+    return [...blanks, ...times];
+  };
   const latest = () => stats()[stats().length - 1];
 
   // gradient factory
@@ -123,13 +127,19 @@ export default function HostStatsDashboard(props: {
     return grad;
   }
 
+  // helpers
+  function padToLimit<T>(arr: T[], filler: any = null): (T | null)[] {
+    const padLen = Math.max(0, HISTORY_LIMIT - arr.length);
+    return [...Array(padLen).fill(filler), ...arr];
+  }
+
   // CPU chart
   const cpuData = (): ChartData<"line"> => ({
     labels: labels(),
     datasets: [
       {
         label: "CPU %",
-        data: stats().map((s) => s.cpu),
+        data: padToLimit(stats().map((s) => s.cpu)),
         fill: true,
         backgroundColor: (ctx) => {
           const c = ctx.chart;
@@ -175,7 +185,7 @@ export default function HostStatsDashboard(props: {
     datasets: [
       {
         label: "Used MiB",
-        data: stats().map((s) => (s.memT - s.memF) / 1024),
+        data: padToLimit(stats().map((s) => (s.memT - s.memF) / (1024 * 1024))),
         fill: true,
         backgroundColor: (ctx) => {
           const c = ctx.chart;
@@ -189,7 +199,7 @@ export default function HostStatsDashboard(props: {
       },
       {
         label: "Free MiB",
-        data: stats().map((s) => s.memF / 1024),
+        data: padToLimit(stats().map((s) => s.memF / (1024 * 1024))),
         fill: true,
         backgroundColor: (ctx) => {
           const c = ctx.chart;
@@ -214,7 +224,7 @@ export default function HostStatsDashboard(props: {
         grid: { color: C().border },
         ticks: { color: C().font },
         max: latest()
-          ? Math.ceil(latest()!.memT / 1024 / 100) * 100
+          ? Math.ceil(latest()!.memT / (1024 * 1024) / 100) * 100
           : undefined,
       },
     },
@@ -237,10 +247,12 @@ export default function HostStatsDashboard(props: {
 
   return (
     <section
-      class={`p-4 min-h-screen ${isDark() ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
+      class={`p-2 ${isDark() ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
     >
-      <h1 class="text-2xl mb-4">Host Stats Dashboard</h1>
-      <p class="mb-4">
+      <h1 class="text-sm mb-2 font-semibold opacity-70 text-right">
+        Host Stats Dashboard
+      </h1>
+      <p class="text-xs mb-2 opacity-60 text-right">
         Real-time CPU &amp; Memory (last {HISTORY_LIMIT} ticks)
       </p>
 
@@ -256,10 +268,10 @@ export default function HostStatsDashboard(props: {
         </div>
       </Show>
 
-      <div class="space-y-8 max-w-3xl mx-auto">
+      <div class="space-y-4 max-w-sm ml-auto">
         {/* CPU CARD */}
         <div
-          class="relative h-64 border rounded-lg"
+          class="relative h-40 border rounded-xl shadow-sm"
           style={{ border: C().border, background: C().cardBg }}
         >
           <div
@@ -268,7 +280,7 @@ export default function HostStatsDashboard(props: {
           >
             CPU Usage (%)
           </div>
-          <div class="chart-wrapper absolute inset-0 pt-6 pb-6 px-4">
+          <div class="chart-wrapper absolute inset-0 pt-5 pb-4 px-3">
             <Line data={cpuData()} options={cpuOpts()} />
           </div>
           <div
@@ -281,7 +293,7 @@ export default function HostStatsDashboard(props: {
 
         {/* MEMORY CARD */}
         <div
-          class="relative h-64 border rounded-lg"
+          class="relative h-40 border rounded-xl shadow-sm"
           style={{ border: C().border, background: C().cardBg }}
         >
           <div
@@ -290,7 +302,7 @@ export default function HostStatsDashboard(props: {
           >
             Memory (MiB)
           </div>
-          <div class="chart-wrapper absolute inset-0 pt-6 pb-6 px-4">
+          <div class="chart-wrapper absolute inset-0 pt-5 pb-4 px-3">
             <Line data={memData()} options={memOpts()} />
           </div>
           <div
@@ -300,12 +312,6 @@ export default function HostStatsDashboard(props: {
             {latest()
               ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
               : "--/--"}
-          </div>
-          <div
-            class="absolute bottom-2 right-4 text-sm font-mono opacity-60"
-            style={{ color: C().font }}
-          >
-            {latest() ? formatMem(latest()!.memF) : "--"}
           </div>
         </div>
       </div>
