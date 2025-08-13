@@ -246,19 +246,12 @@ export default function HostStatsDashboard(props: {
   });
 
   return (
-    <section
-      class={`p-2 ${isDark() ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-700"}`}
+    <div
+      class={`fixed top-20 left-1/2 transform -translate-x-1/2 z-10 ${isDark() ? "text-gray-100" : "text-gray-700"}`}
     >
-      <h1 class="text-sm mb-2 font-semibold opacity-70 text-right">
-        Host Stats Dashboard
-      </h1>
-      <p class="text-xs mb-2 opacity-60 text-right">
-        Real-time CPU &amp; Memory (last {HISTORY_LIMIT} ticks)
-      </p>
-
       <Show when={error()}>
         <div
-          class="p-2 mb-4 rounded font-mono"
+          class="p-2 mb-2 rounded text-xs font-mono max-w-xs"
           style={{
             background: isDark() ? "#7f1d1d" : "#fee2e2",
             color: isDark() ? "#fee2e2" : "#b91c1c",
@@ -268,53 +261,113 @@ export default function HostStatsDashboard(props: {
         </div>
       </Show>
 
-      <div class="space-y-4 max-w-sm ml-auto">
-        {/* CPU CARD */}
+      <div
+        class="p-6 rounded-xl shadow-lg border-2 w-[500px]"
+        style={{
+          background: isDark()
+            ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
+            : "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+          "border-color": isDark() ? "#3b82f6" : "#2563eb",
+        }}
+      >
         <div
-          class="relative h-40 border rounded-xl shadow-sm"
-          style={{ border: C().border, background: C().cardBg }}
+          class="flex items-center gap-3 mb-4 pb-2 border-b"
+          style={{ "border-color": C().border }}
         >
           <div
-            class="absolute top-2 left-4 text-xs"
+            class="w-3 h-3 rounded-full animate-pulse"
+            style={{ background: isDark() ? "#10b981" : "#059669" }}
+          ></div>
+          <h2
+            class="text-sm font-bold tracking-wide"
             style={{ color: C().font }}
           >
-            CPU Usage (%)
-          </div>
-          <div class="chart-wrapper absolute inset-0 pt-5 pb-4 px-3">
-            <Line data={cpuData()} options={cpuOpts()} />
-          </div>
-          <div
-            class="absolute bottom-2 left-4 text-sm font-mono"
-            style={{ color: C().font }}
-          >
-            {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
+            HOST STATS
+          </h2>
+          <div class="flex-1"></div>
+          <div class="text-xs opacity-60" style={{ color: C().font }}>
+            Live
           </div>
         </div>
 
-        {/* MEMORY CARD */}
-        <div
-          class="relative h-40 border rounded-xl shadow-sm"
-          style={{ border: C().border, background: C().cardBg }}
-        >
-          <div
-            class="absolute top-2 left-4 text-xs"
-            style={{ color: C().font }}
-          >
-            Memory (MiB)
+        <div class="flex gap-6">
+          {/* CPU CARD */}
+          <div class="flex-1">
+            <div
+              class="relative h-36 border rounded-lg shadow-sm"
+              style={{
+                border: isDark() ? "#1e40af" : "#3b82f6",
+                background: isDark()
+                  ? "rgba(30, 64, 175, 0.1)"
+                  : "rgba(59, 130, 246, 0.05)",
+              }}
+            >
+              <div class="absolute top-2 left-2 flex items-center gap-1">
+                <div
+                  class="w-2 h-2 rounded-full"
+                  style={{ background: C().cpu }}
+                ></div>
+                <div class="text-xs font-semibold" style={{ color: C().cpu }}>
+                  CPU Usage
+                </div>
+              </div>
+              <div class="chart-wrapper absolute inset-0 pt-7 pb-8 px-3">
+                <Line data={cpuData()} options={cpuOpts()} />
+              </div>
+              <div class="absolute bottom-2 left-2">
+                <div
+                  class="text-lg font-bold font-mono"
+                  style={{ color: C().cpu }}
+                >
+                  {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
+                </div>
+                <div class="text-xs opacity-60" style={{ color: C().font }}>
+                  Current
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="chart-wrapper absolute inset-0 pt-5 pb-4 px-3">
-            <Line data={memData()} options={memOpts()} />
-          </div>
-          <div
-            class="absolute bottom-2 left-4 text-sm font-mono"
-            style={{ color: C().font }}
-          >
-            {latest()
-              ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
-              : "--/--"}
+
+          {/* MEMORY CARD */}
+          <div class="flex-1">
+            <div
+              class="relative h-36 border rounded-lg shadow-sm"
+              style={{
+                border: isDark() ? "#059669" : "#10b981",
+                background: isDark()
+                  ? "rgba(5, 150, 105, 0.1)"
+                  : "rgba(16, 185, 129, 0.05)",
+              }}
+            >
+              <div class="absolute top-2 left-2 flex items-center gap-1">
+                <div
+                  class="w-2 h-2 rounded-full"
+                  style={{ background: C().memU }}
+                ></div>
+                <div class="text-xs font-semibold" style={{ color: C().memU }}>
+                  Memory Usage
+                </div>
+              </div>
+              <div class="chart-wrapper absolute inset-0 pt-7 pb-8 px-3">
+                <Line data={memData()} options={memOpts()} />
+              </div>
+              <div class="absolute bottom-2 left-2">
+                <div
+                  class="text-xs font-bold font-mono"
+                  style={{ color: C().memU }}
+                >
+                  {latest()
+                    ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
+                    : "--/--"}
+                </div>
+                <div class="text-xs opacity-60" style={{ color: C().font }}>
+                  Used / Total
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
