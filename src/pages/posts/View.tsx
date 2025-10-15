@@ -1,4 +1,4 @@
-import { Show, createSignal, createResource, For, createMemo } from "solid-js";
+\import { Show, createSignal, createResource, For, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { useParams } from "@solidjs/router";
 import { blogApi, dropdownApi } from "../../services/all_api";

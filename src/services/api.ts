@@ -1,5 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || "";
-const API_KEY = "03e537d1-3d83-4dc8-988d-16899ae1b7e0";
+const API_KEY = "4462f9f0-01ae-490f-9254-70502ccc0a9a";
 
 export function apiUrl(path: string) {
   return `${API_URL}${path}`;
