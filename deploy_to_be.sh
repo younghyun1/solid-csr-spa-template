@@ -1,11 +1,11 @@
 #!/bin/sh
 npm run build
 rm -rf ../rust-be-template/fe/*
-find ./dist -type f ! -iname '*.png' ! -iname '*.jpg' -exec zstd --ultra -22 -f -o {}.zst {} \;
+find ./dist -type f ! -iname '*.png' ! -iname '*.jpg' -exec gzip -9 -c {} \> {}.gz \;
 
 cd ./dist
-# Copy zstd'd files
-find . -type f -name '*.zst' | while read file; do
+# Copy gzip'd files
+find . -type f -name '*.gz' | while read file; do
   mkdir -p "../../rust-be-template/fe/$(dirname "$file")"
   cp "$file" "../../rust-be-template/fe/$file"
 done

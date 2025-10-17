@@ -86,7 +86,7 @@ export default function VisitorBoard() {
 
         markers = pairs.map((pair) => {
           const [[lat, lng], count] = pair;
-          let popupHtml = `Visitors from here: <b>${count}</b>`;
+          let popupHtml = `Visitations from here: <b>${count}</b>`;
           return L.marker([lat, lng], { icon: emojiIcon })
             .addTo(map!)
             .bindPopup(popupHtml);

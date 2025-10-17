@@ -8,7 +8,7 @@ export default function PostsList() {
 
   return (
     <main class="max-w-2xl mx-auto py-8">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-col items-start gap-3 mb-6">
         <h1 class="text-2xl font-bold">Blog Posts</h1>
         <button
           class="px-4 py-2 text-sm rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
@@ -21,7 +21,9 @@ export default function PostsList() {
         <div>Loading posts...</div>
       </Show>
       <Show when={posts.error}>
-        <div class="text-red-600">Error loading posts: {String(posts.error)}</div>
+        <div class="text-red-600">
+          Error loading posts: {String(posts.error)}
+        </div>
       </Show>
       <ul>
         <Show when={posts()} fallback={<div>No posts found.</div>}>
