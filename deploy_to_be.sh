@@ -1,7 +1,8 @@
 #!/bin/sh
 npm run build
 rm -rf ../rust-be-template/fe/*
-find ./dist -type f ! -iname '*.png' ! -iname '*.jpg' -exec gzip -9 -c {} \> {}.gz \;
+find ./dist -type f ! -iname '*.png' ! -iname '*.jpg' \
+  -exec sh -c 'gzip -9 -c "$1" > "$1.gz"' _ {} \;
 
 cd ./dist
 # Copy gzip'd files
