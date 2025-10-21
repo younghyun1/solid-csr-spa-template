@@ -326,10 +326,10 @@ export default function PostViewPage() {
 
           return (
             <div
-              class={`mt-3 p-3 rounded bg-gray-50 dark:bg-gray-800`}
-              style={{ "margin-left": `${depth * 24}px` }}
+              class={`mt-2 pl-3 md:pl-4 border-l border-gray-200 dark:border-gray-700`}
+              style={{ "margin-left": `${depth * 16}px` }}
             >
-              <div class="mb-1 flex items-center text-sm text-gray-600 dark:text-gray-300">
+              <div class="mb-1.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <span class="font-bold">
                   {(comment as any).user_name ?? "Guest"}
                 </span>
@@ -358,12 +358,11 @@ export default function PostViewPage() {
                 >
                   ▲
                 </button>
-                <span class="text-sm text-emerald-700 dark:text-emerald-400">
-                  {upvotes()}
+
+                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                  {upvotes() - downvotes()}
                 </span>
-                <span class="text-sm text-rose-600 dark:text-rose-400">
-                  {downvotes() > 0 ? `-${downvotes()}` : 0}
-                </span>
+
                 <button
                   class={`text-lg px-1 ${voteState() === 1 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-gray-500 hover:text-rose-600 dark:hover:text-rose-400"}`}
                   onClick={() =>
@@ -476,12 +475,11 @@ export default function PostViewPage() {
                     >
                       ▲
                     </button>
-                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-emerald-700 dark:text-emerald-400">
-                      {postUpvotes()}
+
+                    <span class="text-sm font-semibold text-center my-1 text-gray-800 dark:text-gray-100">
+                      {postUpvotes() - postDownvotes()}
                     </span>
-                    <span class="text-base font-semibold text-center min-w-[2ch] my-1 text-rose-600 dark:text-rose-400">
-                      {postDownvotes() > 0 ? `-${postDownvotes()}` : 0}
-                    </span>
+
                     <button
                       class={`text-2xl transition ${postVoteState() === 1 ? "text-rose-600 dark:text-rose-400 font-bold" : "text-gray-500 hover:text-rose-600 dark:hover:text-rose-400"}`}
                       onClick={() =>
