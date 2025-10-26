@@ -7,6 +7,7 @@ function SignupPage() {
   const [userName, setUserName] = createSignal("");
   const [userEmail, setUserEmail] = createSignal("");
   const [userPassword, setUserPassword] = createSignal("");
+  const [confirmPassword, setConfirmPassword] = createSignal(""); // NEW
   const [userCountry, setUserCountry] = createSignal("");
   const [userLanguage, setUserLanguage] = createSignal("");
   const [userSubdivision, setUserSubdivision] = createSignal("");
@@ -25,6 +26,12 @@ function SignupPage() {
   const [subdivisions, setSubdivisions] = createSignal<any[]>([]);
 
   const navigate = useNavigate();
+
+  // Derived helper: do the two passwords match (and are both non-empty)?
+  const passwordsMismatch = () =>
+    userPassword() !== "" &&
+    confirmPassword() !== "" &&
+    userPassword() !== confirmPassword();
 
   // ––––– fetch countries & languages once on mount
   onMount(() => {
@@ -90,6 +97,11 @@ function SignupPage() {
       return;
     }
 
+    if (passwordsMismatch()) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
     const body = {
       user_name: userName(),
@@ -99,7 +111,11 @@ function SignupPage() {
       user_language: Number(userLanguage()),
       user_subdivision: userSubdivision() ? Number(userSubdivision()) : null,
     };
-    console.log("[submit] payload:", body);
+    // Avoid logging plaintext passwords in production
+    console.log("[submit] payload (redacted):", {
+      ...body,
+      user_password: "***redacted***",
+    });
 
     try {
       const res = await authApi.signup(body);
@@ -196,7 +212,25 @@ function SignupPage() {
               autocomplete="new-password"
               value={userPassword()}
               onInput={(e) => setUserPassword(e.currentTarget.value)}
+              required
             />
+
+            <input
+              class={fieldClasses}
+              type="password"
+              placeholder="Re-enter Password"
+              autocomplete="new-password"
+              value={confirmPassword()}
+              onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+              required
+              aria-invalid={passwordsMismatch() ? "true" : "false"}
+            />
+
+            <Show when={passwordsMismatch()}>
+              <div class="mb-2 -mt-2 text-sm text-red-600 dark:text-red-400">
+                Passwords do not match.
+              </div>
+            </Show>
 
             <select
               class={fieldClasses}
@@ -260,7 +294,7 @@ function SignupPage() {
 
             <button
               type="submit"
-              disabled={loading()}
+              disabled={loading() || passwordsMismatch()}
               class="w-full mb-3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
             >
               {loading() ? "Signing Up…" : "Sign Up"}
