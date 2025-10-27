@@ -67,18 +67,12 @@ function LoginPage() {
             autocomplete="current-password"
             required
           />
-          <div class="flex justify-between w-full mb-6">
+          <div class="flex justify-end w-full mb-6">
             <button
               class="bg-transparent border-none text-blue-600 dark:text-blue-400 cursor-pointer text-sm p-0 hover:underline"
               tabIndex={-1}
               type="button"
-            >
-              Find Account
-            </button>
-            <button
-              class="bg-transparent border-none text-blue-600 dark:text-blue-400 cursor-pointer text-sm p-0 hover:underline"
-              tabIndex={-1}
-              type="button"
+              onClick={() => navigate("/find-password")}
             >
               Find Password
             </button>

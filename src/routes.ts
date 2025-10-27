@@ -13,6 +13,10 @@ export const routes: RouteDefinition[] = [
     component: lazy(() => import("./pages/about")),
   },
   {
+    path: "/find-password",
+    component: lazy(() => import("./pages/find_password")),
+  },
+  {
     path: "/blog",
     children: [
       {
