@@ -18,24 +18,20 @@ export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
 }>({});
 
 const BuildInfoOverlay = () => {
-  // Choose light/dark mode text color
-  const textColor = theme() === "dark" ? "#ededed" : "#18181b";
+  // Choose light/dark mode text color (reactive function)
+  const textColor = () => (theme() === "dark" ? "#ededed" : "black");
 
   return (
     <div
+      class="bg-gray-50 dark:bg-gray-950 transition-colors duration-90"
       style={{
-        position: "fixed",
-        left: 0,
-        bottom: 0,
-        background: "none", // remove box color
-        color: textColor,
+        width: "100%",
+        color: textColor(),
         "font-size": "0.85em",
         padding: "6px 14px 7px 12px",
-        "border-top-right-radius": "8px",
-        "z-index": 9999,
         "font-family": "monospace",
-        "pointer-events": "none",
-        // no border or shadow
+        // Ensure it sits above if we ever used sticky, but here it's in flow
+        "z-index": 10,
       }}
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
@@ -85,7 +81,6 @@ const App: Component = (props: { children: Element }) => {
       style="display: flex; flex-direction: column; min-height: 100vh;"
     >
       <TopBar />
-      <BuildInfoOverlay />
 
       <main
         class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100"
@@ -93,6 +88,8 @@ const App: Component = (props: { children: Element }) => {
       >
         <Suspense>{props.children}</Suspense>
       </main>
+
+      <BuildInfoOverlay />
     </div>
   );
 };
