@@ -1,8 +1,7 @@
 import { createSignal, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
-// TODO: This is a placeholder. You'll need to create and import a service for password recovery APIs.
-// import { authApi } from "../services/all_api";
+import { authApi } from "../services/all_api";
 
 function FindPasswordPage() {
   const [email, setEmail] = createSignal("");
@@ -18,34 +17,25 @@ function FindPasswordPage() {
     setSuccessMessage(null);
 
     try {
-      // TODO: Implement the actual API call to your find-password endpoint.
-      // This is a placeholder to show how the logic would work.
-      console.log(`TODO: Send password reset request for: ${email()}`);
-
-      /*
-      // Example of what a real API call might look like:
-      const res = await authApi.requestPasswordReset({
+      await authApi.resetPasswordRequest({
         user_email: email(),
       });
 
-      if (res.success) {
-        setSuccessMessage("If an account with that email exists, a password reset link has been sent.");
-        setEmail(""); // Clear the input on success
-      } else {
-        setError(res?.data?.message ?? "Failed to send reset link.");
-      }
-      */
-
-      // Simulating network delay for demonstration purposes.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Assuming success for this placeholder:
       setSuccessMessage(
         "If an account with that email exists, a password reset link has been sent.",
       );
       setEmail(""); // Clear the input on success
     } catch (e: any) {
-      setError(e?.message ?? "An unexpected error occurred. Please try again.");
+      let msg = e?.message || "An unexpected error occurred. Please try again.";
+      try {
+        const json = JSON.parse(msg);
+        if (json.message) {
+          msg = json.message;
+        }
+      } catch {
+        // ignore
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,10 @@ export const routes: RouteDefinition[] = [
     component: lazy(() => import("./pages/find_password")),
   },
   {
+    path: "/reset-password",
+    component: lazy(() => import("./pages/reset_password")),
+  },
+  {
     path: "/blog",
     children: [
       {
