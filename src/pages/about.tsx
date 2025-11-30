@@ -3,12 +3,21 @@ import { createEffect, Suspense } from "solid-js";
 export default function About() {
   return (
     <section class="bg-sky-50 dark:bg-black text-gray-700 dark:text-gray-100 p-8 min-h-screen transition-colors duration-90">
-      <h1 class="text-2xl font-bold mb-2">About</h1>
+      <div class="border-l-4 border-sky-500 dark:border-sky-400 pl-3 mb-4">
+        <h1 class="text-2xl font-bold mb-1 tracking-tight">About</h1>
 
-      <h2 class="text-xl font-semibold mt-2 mb-2">
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Last updated: 2025-11-30
+        </p>
+      </div>
+
+      <h2 class="text-xl font-semibold mt-2 mb-1">
         Chi Younghyun / 지영현 / 池營賢
       </h2>
-      <h3 class="text-lg font-medium mb-4">Backend Software Engineer</h3>
+
+      <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">
+        Backend Software Engineer · Rust / Infra / Data Pipelines
+      </h3>
 
       <div class="flex flex-wrap gap-2 mb-4">
         <img
@@ -238,6 +247,24 @@ export default function About() {
             class="underline text-blue-700 dark:text-blue-300"
           >
             younghyun1@gmail.com
+          </a>
+        </li>
+        <li>
+          LinkedIn:{" "}
+          <a
+            href="https://www.linkedin.com/in/young-hyun-chi-553431376/"
+            class="underline text-blue-700 dark:text-blue-300"
+          >
+            https://www.linkedin.com/in/young-hyun-chi-553431376/
+          </a>
+        </li>
+        <li>
+          GitHub:{" "}
+          <a
+            href="https://github.com/younghyun1"
+            class="underline text-blue-700 dark:text-blue-300"
+          >
+            https://github.com/younghyun1
           </a>
         </li>
       </ul>
