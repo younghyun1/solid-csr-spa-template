@@ -1,4 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || "";
+
 const API_KEY = "4462f9f0-01ae-490f-9254-70502ccc0a9a";
 
 export function apiUrl(path: string) {
@@ -6,11 +7,32 @@ export function apiUrl(path: string) {
 }
 
 // Expose Vite-injected globals for build info headers
+
 declare const __BUILD_TIMESTAMP__: string;
+
 declare const __APP_NAME__: string;
 
 import { setAuthenticated, setUser } from "../state/auth";
+
 import { setServerBuildInfo } from "../app";
+
+// Shape of /api/healthcheck/state (RootHandlerResponse wrapper)
+export type HealthStateResponse = {
+  success: boolean;
+  data: {
+    timestamp: string;
+    server_uptime: string;
+    responses_handled: number;
+    users_logged_in: number;
+    db_version: string;
+    db_latency: string;
+  };
+  meta: {
+    time_to_process: string;
+    timestamp: string;
+    metadata: unknown;
+  };
+};
 
 // Post-login redirect/replay bootstrap (runs on module load)
 (() => {
@@ -65,22 +87,30 @@ import { setServerBuildInfo } from "../app";
 })();
 
 // Unified error-handling apiFetch, with client build info headers
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   options.headers = {
     ...(options.headers || {}),
+
     "x-api-key": API_KEY,
   };
+
   const response = await fetch(apiUrl(path), options);
 
-  // Update server build info from headers, if present
   const builtTime = response.headers.get("x-server-built-time");
+
   const serverName = response.headers.get("x-server-name");
+
   const rustVersion = response.headers.get("x-server-rust-version");
+
   if (builtTime || serverName || rustVersion) {
     setServerBuildInfo((prev) => ({
       ...prev,
+
       built_time: builtTime ?? prev.built_time,
+
       name: serverName ?? prev.name,
+
       rust_version: rustVersion ?? prev.rust_version,
     }));
   }
@@ -161,4 +191,25 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   }
 
   return response;
+}
+
+// Helper for JSON GETs that also benefits from header-based build info
+export async function apiGetJson<T = unknown>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const resp = await apiFetch(path, {
+    method: options.method ?? "GET",
+    credentials: options.credentials ?? "include",
+    ...options,
+  });
+  if (!resp.ok) {
+    throw new Error(`GET ${path} failed: ${resp.status}`);
+  }
+  return (await resp.json()) as T;
+}
+
+// Dedicated helper for /api/healthcheck/state
+export async function fetchHealthState(): Promise<HealthStateResponse> {
+  return apiGetJson<HealthStateResponse>("/api/healthcheck/state");
 }
