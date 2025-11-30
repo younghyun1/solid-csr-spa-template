@@ -138,6 +138,7 @@ export default function About() {
           employment authorization document; not engaged in paid work during
           this period.
         </li>
+
         <li>
           <b>GenesisNest (Jan 2025 – Jul 2025, Seongnam, South Korea):</b>{" "}
           Software engineer working on infrastructure management tools for
@@ -148,6 +149,7 @@ export default function About() {
           bugfixes, and coordinated with vendors and other teams for services
           used by tens of millions of users across Asia and Europe.
         </li>
+
         <li>
           <b>pampam Inc (Nov 2024 – Dec 2024, Seoul, South Korea):</b> Contract
           software engineer responsible for PostgreSQL schema design, Rust
@@ -156,6 +158,7 @@ export default function About() {
           YouTube API (tens of millions of comments/users) and applied LLMs and
           on‑server OSS models to summarize and engineer insights.
         </li>
+
         <li>
           <b>EAN Technology (Sep 2023 – Sep 2024, Seoul, South Korea):</b>{" "}
           Backend lead for Samsung C&amp;T Digital Twin and AI Energy
@@ -168,6 +171,7 @@ export default function About() {
           Also led backend for AI Energy Management (tokio‑postgres, raw SQL,
           greenfield schema), mentoring engineers moving from Node/Java to Rust.
         </li>
+
         <li>
           <b>Earlier work:</b> Short Rust/LLM contracts, translation and
           interpretation (including high‑level government and diplomatic
@@ -175,9 +179,40 @@ export default function About() {
           attached to US Forces Korea, training thousands of personnel in
           fitness, culture, and soldiering skills.
         </li>
+      </ul>
+
+      <h3 class="text-lg font-semibold mt-6 mb-2">Education</h3>
+
+      <ul class="mb-4 list-disc list-inside">
         <li>
-          <b>Education:</b> B. Eng in Software Engineering, Sungkyunkwan
-          University, Republic of Korea.
+          <b>
+            Sungkyunkwan University (Mar 2015 – Aug 2023) · Bachelor of
+            Engineering, Computer Software Engineering
+          </b>
+          <div class="mt-1 ml-4 space-y-1 text-sm">
+            <p>
+              Completed a comprehensive course blending computer science, web
+              and embedded software engineering, and basic electronics, with a
+              classical emphasis on logic, low-level languages, operating
+              systems, and the binary details of network engineering.
+            </p>
+            <p>
+              Graduation paper placed 3rd in the department, was published with
+              IEEE, and presented at IMCOM (an international conference with
+              ~30% acceptance rate).
+            </p>
+            <p>
+              Activities included: journalist at the Sungkyun Times (the
+              university&apos;s official English-language monthly), photographer
+              at SAPA (the central photography club), participation in student
+              organizing, and swimming.
+            </p>
+            <p>
+              Certified Confucian scholar-bureaucrat and, at least in spirit, a
+              small inheritor of the administrative obsessionism of the Kingdom
+              of Joseon.
+            </p>
+          </div>
         </li>
       </ul>
 
@@ -225,7 +260,12 @@ export default function About() {
         <li>Operating systems and compilers</li>
 
         <li>Construction and electrical engineering</li>
+
         <li>Video game modding and technical art</li>
+
+        <li>Landscape photography</li>
+
+        <li>Stanley Kubrick films and meticulous filmmaking</li>
       </ul>
 
       <h3 class="text-lg font-semibold mt-6 mb-2">Studying</h3>

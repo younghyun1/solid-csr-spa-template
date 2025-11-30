@@ -60,10 +60,42 @@ const TopBar = () => (
           </li>
           <li class="py-2 px-4">
             <a
+              href="/about-blog"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              About Blog
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
               href="/blog"
               class="no-underline hover:underline transition-colors duration-90"
             >
               Blog
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/photographs"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Photographs
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/forum"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Forum
+            </a>
+          </li>
+          <li class="py-2 px-4">
+            <a
+              href="/projects"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Projects and Demos
             </a>
           </li>
           <li class="py-2 px-4">
