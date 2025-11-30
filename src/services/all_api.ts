@@ -212,6 +212,10 @@ import type {
   VotePostResponse,
 } from "../dtos/responses/blog";
 
+export const geoIpApi = {
+  getGeoIpInfo: (ip: string) => get<any>(`/api/geo-ip-info/${ip}`),
+};
+
 export const blogApi = {
   getPosts: async (query?: GetPostsRequest) =>
     await get<ApiResponse<GetPostsResponse>>("/api/blog/posts", {
