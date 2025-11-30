@@ -26,7 +26,7 @@ const BottomBar: Component = () => {
       }}
     >
       <div
-        class="max-w-5xl mx-auto flex flex-col justify-start items-start gap-0 px-3 py-1.5 text-xs"
+        class="w-full px-3 py-1.5 text-xs text-left"
         style={{
           "font-family": "monospace",
         }}
@@ -34,7 +34,8 @@ const BottomBar: Component = () => {
         <div class="text-gray-900 dark:text-white leading-tight">
           FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
         </div>
-        <div class="text-gray-900 dark:text-white">
+
+        <div class="text-gray-900 dark:text-white leading-tight">
           BE: built {serverBuildInfo().built_time ?? "…"} (
           {serverBuildInfo().name ?? "…"})
           {serverBuildInfo().rust_version && (
