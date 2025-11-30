@@ -17,33 +17,32 @@ export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
   rust_version?: string;
 }>({});
 
-const BuildInfoOverlay = () => {
-  // Choose light/dark mode text color (reactive function)
-  const textColor = () => (theme() === "dark" ? "white" : "black");
-
+const BottomBar: Component = () => {
   return (
-    <div
-      class="bg-gray-50 dark:bg-gray-950 transition-colors duration-90"
+    <footer
+      class="fixed bottom-0 left-0 w-full transition-colors duration-90 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950"
       style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        width: "100%",
-        color: textColor(),
-        "font-size": "0.85em",
-        padding: "6px 14px 7px 12px",
-        "font-family": "monospace",
         "z-index": 50,
       }}
     >
-      FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
-      <br />
-      BE: built {serverBuildInfo().built_time ?? "…"} (
-      {serverBuildInfo().name ?? "…"})
-      {serverBuildInfo().rust_version && (
-        <> rust/{serverBuildInfo().rust_version}</>
-      )}
-    </div>
+      <div
+        class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 px-3 py-1.5 text-xs"
+        style={{
+          "font-family": "monospace",
+        }}
+      >
+        <div class="text-gray-900 dark:text-white">
+          FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
+        </div>
+        <div class="text-gray-900 dark:text-white">
+          BE: built {serverBuildInfo().built_time ?? "…"} (
+          {serverBuildInfo().name ?? "…"})
+          {serverBuildInfo().rust_version && (
+            <> rust/{serverBuildInfo().rust_version}</>
+          )}
+        </div>
+      </div>
+    </footer>
   );
 };
 
@@ -80,18 +79,19 @@ const App: Component = (props: { children: Element }) => {
   return (
     <div
       id="app-root"
+      class="transition-colors duration-90"
       style="display: flex; flex-direction: column; min-height: 100vh;"
     >
       <TopBar />
 
       <main
-        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 pb-20"
+        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 pb-10"
         style="flex: 1 1 0%; min-height: 0;"
       >
         <Suspense>{props.children}</Suspense>
       </main>
 
-      <BuildInfoOverlay />
+      <BottomBar />
     </div>
   );
 };
