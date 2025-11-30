@@ -4,6 +4,7 @@ import {
   onMount,
   createSignal,
   createEffect,
+  onCleanup,
 } from "solid-js";
 
 import { A, useLocation } from "@solidjs/router";
@@ -35,32 +36,130 @@ export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
 }>({});
 
 const BottomBar: Component = () => {
+  const location = useLocation();
+
   const [healthState, setHealthState] = createSignal<
-    HealthStateResponse["data"] | null
+    | (HealthStateResponse["data"] & {
+        client_latency_ms?: number;
+
+        time_to_process?: string;
+
+        baseline_uptime_ms?: number;
+        baseline_timestamp?: string;
+      })
+    | null
   >(null);
-  const [healthLoaded, setHealthLoaded] = createSignal(false);
 
-  // On first render, if BE line is effectively blank, fetch /api/healthcheck/state
+  const [clientNow, setClientNow] = createSignal<Date | null>(null);
+
+  // Refresh health state on route changes
+
   createEffect(() => {
-    const info = serverBuildInfo();
-    const hasBuiltInfo =
-      !!info.built_time || !!info.name || !!info.rust_version;
+    // depend on pathname so this re-runs on each navigation
 
-    if (!hasBuiltInfo && !healthLoaded()) {
-      setHealthLoaded(true);
-      (async () => {
-        try {
-          const resp = await fetchHealthState();
-          if (resp.success && resp.data) {
-            setHealthState(resp.data);
-            // serverBuildInfo will be populated via headers handled in apiFetch
-          }
-        } catch {
-          // leave metrics blank if call fails
+    const _path = location.pathname;
+
+    (async () => {
+      const start = performance.now();
+
+      try {
+        const resp = await fetchHealthState();
+
+        const end = performance.now();
+
+        const client_latency_ms = end - start;
+
+        if (resp.success && resp.data) {
+          const baseline_uptime_ms = parseUptimeToMs(resp.data.server_uptime);
+
+          setHealthState({
+            ...resp.data,
+
+            client_latency_ms,
+
+            time_to_process: resp.meta.time_to_process,
+
+            baseline_uptime_ms: baseline_uptime_ms ?? undefined,
+            baseline_timestamp: resp.data.timestamp,
+          });
+
+          // serverBuildInfo will be populated via headers handled in apiFetch
+        } else {
+          setHealthState(null);
         }
-      })();
-    }
+      } catch {
+        setHealthState(null);
+      }
+    })();
   });
+
+  // Live ticking for uptime / age display
+
+  createEffect(() => {
+    const interval = setInterval(() => {
+      setClientNow(new Date());
+    }, 1000);
+
+    onCleanup(() => clearInterval(interval));
+  });
+
+  const formatIsoAge = (iso: string | undefined) => {
+    if (!iso) return "–";
+
+    const base = new Date(iso);
+
+    const now = clientNow() ?? new Date();
+
+    const diffMs = now.getTime() - base.getTime();
+
+    if (Number.isNaN(diffMs) || diffMs < 0) return "just now";
+
+    const totalSec = Math.floor(diffMs / 1000);
+
+    const mins = Math.floor(totalSec / 60);
+
+    const secs = totalSec % 60;
+
+    if (mins <= 0) return `${secs}s ago`;
+
+    return `${mins}m ${secs}s ago`;
+  };
+
+  // Parse uptime string like "3 minutes, 51 seconds, 688 milliseconds" into ms
+  const parseUptimeToMs = (uptime: string | undefined): number | null => {
+    if (!uptime) return null;
+    let total = 0;
+    const parts = uptime.split(",").map((p) => p.trim().toLowerCase());
+    for (const part of parts) {
+      const [numStr, unitRaw] = part.split(/\s+/, 2);
+      const value = Number(numStr);
+      if (!Number.isFinite(value)) continue;
+      const unit = unitRaw ?? "";
+      if (unit.startsWith("hour")) total += value * 60 * 60 * 1000;
+      else if (unit.startsWith("minute")) total += value * 60 * 1000;
+      else if (unit.startsWith("second")) total += value * 1000;
+      else if (unit.startsWith("millisecond")) total += value;
+    }
+    return total || null;
+  };
+
+  const formatUptimeMs = (ms: number | null): string => {
+    if (ms == null || !Number.isFinite(ms) || ms < 0) return "–";
+
+    const totalSec = Math.floor(ms / 1000);
+
+    const hours = Math.floor(totalSec / 3600);
+
+    const mins = Math.floor((totalSec % 3600) / 60);
+
+    const secs = totalSec % 60;
+
+    if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
+
+    if (mins > 0) return `${mins}m ${secs}s`;
+
+    return `${secs}s`;
+  };
 
   return (
     <footer
@@ -91,17 +190,42 @@ const BottomBar: Component = () => {
 
         <div class="text-gray-900 dark:text-white leading-tight text-right space-y-0.5">
           {healthState() ? (
-            <>
-              <div>
-                up {healthState()!.server_uptime} · handled{" "}
-                {healthState()!.responses_handled} · sessions{" "}
-                {healthState()!.users_logged_in}
-              </div>
-              <div>
-                db {healthState()!.db_version} · latency{" "}
-                {healthState()!.db_latency}
-              </div>
-            </>
+            (() => {
+              const hs = healthState()!;
+              const baselineMs =
+                hs.baseline_uptime_ms ?? parseUptimeToMs(hs.server_uptime);
+              const baselineTs = hs.baseline_timestamp ?? hs.timestamp;
+              let liveUptime: string = hs.server_uptime;
+
+              if (baselineMs != null && baselineTs) {
+                const base = new Date(baselineTs);
+                const now = clientNow() ?? new Date();
+                const extra = now.getTime() - base.getTime();
+                const totalMs =
+                  baselineMs +
+                  (Number.isFinite(extra) ? Math.max(extra, 0) : 0);
+                liveUptime = formatUptimeMs(totalMs);
+              }
+
+              return (
+                <>
+                  <div>
+                    up {liveUptime} · handled {hs.responses_handled} responses ·
+                    sessions {hs.users_logged_in}
+                  </div>
+
+                  <div>
+                    db {hs.db_version} · db latency {hs.db_latency}
+                  </div>
+
+                  <div>
+                    srv proc {hs.time_to_process ?? "?"} · net{" "}
+                    {hs.client_latency_ms?.toFixed(1) ?? "?"}ms · state{" "}
+                    {formatIsoAge(hs.timestamp)}
+                  </div>
+                </>
+              );
+            })()
           ) : (
             <div>metrics: …</div>
           )}
