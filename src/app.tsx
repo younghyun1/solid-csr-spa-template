@@ -19,7 +19,7 @@ export const [serverBuildInfo, setServerBuildInfo] = createSignal<{
 
 const BuildInfoOverlay = () => {
   // Choose light/dark mode text color (reactive function)
-  const textColor = () => (theme() === "dark" ? "#ededed" : "black");
+  const textColor = () => (theme() === "dark" ? "white" : "black");
 
   return (
     <div
