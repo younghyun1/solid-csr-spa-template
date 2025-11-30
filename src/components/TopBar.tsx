@@ -55,7 +55,7 @@ const TopBar = () => (
               href="/about"
               class="no-underline hover:underline transition-colors duration-90"
             >
-              About
+              About Me
             </a>
           </li>
           <li class="py-2 px-4">

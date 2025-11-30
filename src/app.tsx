@@ -219,7 +219,7 @@ const BottomBar: Component = () => {
                   </div>
 
                   <div>
-                    srv proc {hs.time_to_process ?? "?"} · net{" "}
+                    time to generate state report: {hs.time_to_process ?? "?"} · net{" "}
                     {hs.client_latency_ms?.toFixed(1) ?? "?"}ms · state{" "}
                     {formatIsoAge(hs.timestamp)}
                   </div>
