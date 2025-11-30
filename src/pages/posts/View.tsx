@@ -330,6 +330,13 @@ export default function PostViewPage() {
               style={{ "margin-left": `${depth * 16}px` }}
             >
               <div class="mb-1.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <Show when={(comment as any).user_profile_picture_url}>
+                  <img
+                    src={(comment as any).user_profile_picture_url}
+                    alt={(comment as any).user_name}
+                    class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                  />
+                </Show>
                 <span class="font-bold">
                   {(comment as any).user_name ?? "Guest"}
                 </span>
