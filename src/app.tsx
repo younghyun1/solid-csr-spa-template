@@ -26,12 +26,12 @@ const BottomBar: Component = () => {
       }}
     >
       <div
-        class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 px-3 py-1.5 text-xs"
+        class="max-w-5xl mx-auto flex flex-col justify-start items-start gap-0 px-3 py-1.5 text-xs"
         style={{
           "font-family": "monospace",
         }}
       >
-        <div class="text-gray-900 dark:text-white">
+        <div class="text-gray-900 dark:text-white leading-tight">
           FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
         </div>
         <div class="text-gray-900 dark:text-white">
