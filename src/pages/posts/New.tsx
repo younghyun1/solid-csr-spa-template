@@ -2,7 +2,6 @@ import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { blogApi } from "../../services/all_api";
 import MarkdownEditor from "../../components/MarkdownEditor";
-
 export default function NewPostPage() {
   const [title, setTitle] = createSignal("");
   const [tags, setTags] = createSignal("");

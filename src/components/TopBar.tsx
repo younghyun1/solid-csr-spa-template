@@ -106,6 +106,14 @@ const TopBar = () => (
               Visitor Board
             </a>
           </li>
+          <li class="py-2 px-4">
+            <a
+              href="/visitor-board"
+              class="no-underline hover:underline transition-colors duration-90"
+            >
+              Geo-IP Database
+            </a>
+          </li>
         </ul>
       </nav>
     </div>

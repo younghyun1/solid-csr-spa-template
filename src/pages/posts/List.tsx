@@ -60,6 +60,13 @@ export default function PostsList() {
                   {/* Content Column */}
                   <div class="flex-1 px-4 py-3">
                     <div class="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                      <Show when={(post as any).user_profile_picture_url}>
+                        <img
+                          src={(post as any).user_profile_picture_url}
+                          alt={(post as any).user_name}
+                          class="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                        />
+                      </Show>
                       <span class="font-medium text-gray-900 dark:text-gray-300">
                         {(post as any).user_name ?? "Unknown"}
                       </span>
