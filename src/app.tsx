@@ -25,13 +25,15 @@ const BuildInfoOverlay = () => {
     <div
       class="bg-gray-50 dark:bg-gray-950 transition-colors duration-90"
       style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
         width: "100%",
         color: textColor(),
         "font-size": "0.85em",
         padding: "6px 14px 7px 12px",
         "font-family": "monospace",
-        // Ensure it sits above if we ever used sticky, but here it's in flow
-        "z-index": 10,
+        "z-index": 50,
       }}
     >
       FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
@@ -83,7 +85,7 @@ const App: Component = (props: { children: Element }) => {
       <TopBar />
 
       <main
-        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100"
+        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 pb-20"
         style="flex: 1 1 0%; min-height: 0;"
       >
         <Suspense>{props.children}</Suspense>
