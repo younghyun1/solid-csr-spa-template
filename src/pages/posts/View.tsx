@@ -504,8 +504,17 @@ export default function PostViewPage() {
                       {data().post.post_title}
                     </h1>
                     <div class="flex items-center text-sm text-gray-400 mb-2">
+                      <Show
+                        when={data().user_badge_info?.user_profile_picture_url}
+                      >
+                        <img
+                          src={data().user_badge_info.user_profile_picture_url}
+                          alt={data().user_badge_info.user_name}
+                          class="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-700 mr-2"
+                        />
+                      </Show>
                       <span class="text-gray-700 dark:text-gray-300">
-                        {(data().post as any).user_name ?? "Unknown"}
+                        {data().user_badge_info?.user_name ?? "Unknown"}
                       </span>
                       <Show
                         when={formatCountry((data().post as any).user_country)}

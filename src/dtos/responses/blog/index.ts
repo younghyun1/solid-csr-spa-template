@@ -14,12 +14,20 @@ export interface CommentResponse {
   total_upvotes: number;
   total_downvotes: number;
   vote_state: 0 | 1 | 2;
+  user_name: string;
+  user_profile_picture_url: string;
 }
 
 export interface ReadPostResponse {
   post: Post;
   comments: CommentResponse[];
   vote_state: 0 | 1 | 2;
+  user_badge_info: UserBadgeInfo;
+}
+
+export interface UserBadgeInfo {
+  user_name: string;
+  user_profile_picture_url: string;
 }
 
 export interface SubmitPostResponse {
@@ -53,7 +61,8 @@ export interface PostInfo {
   post_is_published: boolean;
   post_tags: string[];
   vote_state: 0 | 1 | 2;
-  // add more as needed matching backend
+  user_name: string;
+  user_profile_picture_url: string;
 }
 
 export interface Post {
@@ -87,4 +96,6 @@ export interface SubmitCommentResponse {
   total_upvotes: number;
   total_downvotes: number;
   vote_state: 0 | 1 | 2;
+  user_name: string;
+  user_profile_picture_url: string;
 }

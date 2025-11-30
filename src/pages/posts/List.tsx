@@ -7,7 +7,7 @@ export default function PostsList() {
   const navigate = useNavigate();
 
   return (
-    <main class="max-w-5xl mx-auto py-8 px-4">
+    <main class="w-full mx-auto py-8 px-8">
       {/* 1. LAYOUT FIX: Align title and button in a row */}
       <div class="flex flex-row items-center justify-between mb-4">
         <h1 class="text-2xl font-bold">Blog Posts</h1>
@@ -45,6 +45,13 @@ export default function PostsList() {
             {(post) => (
               <li class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition hover:shadow-md">
                 <div class="flex">
+                  <div class="flex flex-col items-center justify-center w-16 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 rounded-l">
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-200">
+                      {((post as any)?.total_upvotes ?? 0) -
+                        ((post as any)?.total_downvotes ?? 0)}
+                    </span>
+                  </div>
+
                   {/* Content Column */}
                   <div class="flex-1 px-4 py-3">
                     <div class="text-xs text-gray-500 mb-1 flex items-center gap-1">
