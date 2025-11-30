@@ -246,9 +246,7 @@ export default function HostStatsDashboard(props: {
   });
 
   return (
-    <div
-      class={`fixed top-20 left-1/2 transform -translate-x-1/2 z-10 ${isDark() ? "text-gray-100" : "text-gray-700"}`}
-    >
+    <div class={`${isDark() ? "text-gray-100" : "text-gray-700"}`}>
       <Show when={error()}>
         <div
           class="p-2 mb-2 rounded text-xs font-mono max-w-xs"
@@ -262,7 +260,7 @@ export default function HostStatsDashboard(props: {
       </Show>
 
       <div
-        class="p-6 rounded-xl shadow-lg border-2 w-[500px]"
+        class="p-8 rounded-xl shadow-lg border-2 w-[600px]"
         style={{
           background: isDark()
             ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
@@ -290,7 +288,7 @@ export default function HostStatsDashboard(props: {
           </div>
         </div>
 
-        <div class="flex gap-6">
+        <div class="flex gap-8">
           {/* CPU CARD */}
           <div class="flex-1">
             <div
