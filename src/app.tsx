@@ -219,8 +219,8 @@ const BottomBar: Component = () => {
                   </div>
 
                   <div>
-                    time to generate state report: {hs.time_to_process ?? "?"} · net{" "}
-                    {hs.client_latency_ms?.toFixed(1) ?? "?"}ms · state{" "}
+                    time to generate state report: {hs.time_to_process ?? "?"} ·
+                    net {hs.client_latency_ms?.toFixed(1) ?? "?"}ms · state{" "}
                     {formatIsoAge(hs.timestamp)}
                   </div>
                 </>
@@ -268,15 +268,11 @@ const App: Component = (props: { children: Element }) => {
   return (
     <div
       id="app-root"
-      class="transition-colors duration-90"
-      style="display: flex; flex-direction: column; min-height: 100vh;"
+      class="transition-colors duration-90 min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 overflow-x-hidden"
     >
       <TopBar />
 
-      <main
-        class="transition-colors duration-90 bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 pb-10"
-        style="flex: 1 1 0%; min-height: 0;"
-      >
+      <main class="flex-1 min-h-0 pb-10">
         <Suspense>{props.children}</Suspense>
       </main>
 
