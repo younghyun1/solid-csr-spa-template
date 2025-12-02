@@ -163,18 +163,18 @@ const BottomBar: Component = () => {
 
   return (
     <footer
-      class="fixed bottom-0 left-0 w-full transition-colors duration-90 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950"
+      class="fixed bottom-0 left-0 w-full transition-colors duration-90 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 text-[9px] sm:text-[11px]"
       style={{
         "z-index": 50,
       }}
     >
       <div
-        class="w-full px-3 py-1.5 text-xs flex flex-row justify-between items-start gap-3"
+        class="w-full px-2 sm:px-3 py-0.5 sm:py-1.5 flex flex-row justify-between items-start gap-2 sm:gap-3"
         style={{
           "font-family": "monospace",
         }}
       >
-        <div class="text-gray-900 dark:text-white leading-tight space-y-0.5">
+        <div class="text-gray-900 dark:text-white leading-tight space-y-0.5 max-w-[55%]">
           <div>
             FE: built {__BUILD_TIMESTAMP__} w. solidjs {__SOLID_VERSION__}
           </div>
@@ -188,22 +188,29 @@ const BottomBar: Component = () => {
           </div>
         </div>
 
-        <div class="text-gray-900 dark:text-white leading-tight text-right space-y-0.5">
+        <div class="text-gray-900 dark:text-white leading-tight text-right space-y-0.5 max-w-[45%]">
           {healthState() ? (
             (() => {
               const hs = healthState()!;
+
               const baselineMs =
                 hs.baseline_uptime_ms ?? parseUptimeToMs(hs.server_uptime);
+
               const baselineTs = hs.baseline_timestamp ?? hs.timestamp;
+
               let liveUptime: string = hs.server_uptime;
 
               if (baselineMs != null && baselineTs) {
                 const base = new Date(baselineTs);
+
                 const now = clientNow() ?? new Date();
+
                 const extra = now.getTime() - base.getTime();
+
                 const totalMs =
                   baselineMs +
                   (Number.isFinite(extra) ? Math.max(extra, 0) : 0);
+
                 liveUptime = formatUptimeMs(totalMs);
               }
 
@@ -214,11 +221,11 @@ const BottomBar: Component = () => {
                     sessions {hs.users_logged_in}
                   </div>
 
-                  <div>
+                  <div class="hidden xs:block sm:block">
                     db {hs.db_version} · db latency {hs.db_latency}
                   </div>
 
-                  <div>
+                  <div class="hidden sm:block">
                     time to generate state report: {hs.time_to_process ?? "?"} ·
                     net {hs.client_latency_ms?.toFixed(1) ?? "?"}ms · state{" "}
                     {formatIsoAge(hs.timestamp)}

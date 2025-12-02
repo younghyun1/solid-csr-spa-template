@@ -36,9 +36,8 @@ const handleLogout = async () => {
 
 const TopBar = () => (
   <header class="sticky top-0 z-40 border-b border-gray-200 dark:border-gray-800 bg-white text-gray-900 dark:bg-black dark:text-white transition-colors duration-90">
-    <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
-      <div class="flex flex-wrap items-center justify-between gap-2 py-2 sm:py-3">
-        {/* Left: logo + nav */}
+    <div class="w-full px-3 sm:px-4 lg:px-6">
+      <div class="flex items-center justify-between gap-2 py-2 sm:py-3">
         <div class="flex min-w-0 flex-1 items-center gap-3 sm:gap-6">
           <a
             href="/"
@@ -47,10 +46,11 @@ const TopBar = () => (
             Younghyun&apos;s Blog
           </a>
 
-          {/* Scrollable nav on small screens */}
-          <nav class="ml-2 flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400/60 scrollbar-track-transparent">
-            <ul class="flex min-w-max items-center text-xs sm:text-sm">
-              <li class="py-1 px-2 sm:px-3">
+          {/* Nav: scrollable on small screens, inline on md+ */}
+
+          <nav class="ml-2 flex-1 overflow-x-auto md:overflow-visible">
+            <ul class="flex items-center text-xs sm:text-sm md:text-base min-w-max md:min-w-0">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -59,7 +59,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/about"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -68,7 +68,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/about-blog"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -77,7 +77,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/blog"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -86,7 +86,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/photographs"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -95,7 +95,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/forum"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -104,7 +104,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/projects"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -113,7 +113,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/visitor-board"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
@@ -122,7 +122,7 @@ const TopBar = () => (
                 </a>
               </li>
 
-              <li class="py-1 px-2 sm:px-3">
+              <li class="py-1 px-2 md:px-3">
                 <a
                   href="/geo-ip-db"
                   class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
