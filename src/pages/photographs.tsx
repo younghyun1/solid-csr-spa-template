@@ -270,6 +270,13 @@ export default function Photographs() {
     } catch (err: any) {
       console.error("Upload failed:", err);
 
+      if (err.response?.status === 401 || err.status === 401) {
+        window.location.href = `/login?next=${encodeURIComponent(
+          window.location.pathname,
+        )}`;
+        return;
+      }
+
       alert("Failed to upload photo.");
     } finally {
       setUploading(false);
