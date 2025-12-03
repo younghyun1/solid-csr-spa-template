@@ -99,8 +99,9 @@ const styles = `
   max-width: 100%;
 }
 .details-modal {
-  max-width: 1200px;
+  max-width: 95vw;
   width: 100%;
+  height: 90vh;
   flex-direction: row;
   overflow: hidden;
 }
@@ -125,11 +126,11 @@ const styles = `
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  padding: 1rem;
+  position: relative;
 }
 .details-image-container img {
-  max-width: calc(100% - 2rem);
-  max-height: calc(100vh - 4rem);
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 .details-info {
@@ -524,6 +525,28 @@ export default function Photographs() {
                 src={selectedPhoto()!.photograph_link}
                 alt={selectedPhoto()!.photograph_comments}
               />
+              <a
+                href={selectedPhoto()!.photograph_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
+                title="Open original"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                  />
+                </svg>
+              </a>
             </div>
             <div class="details-info bg-white dark:bg-gray-800">
               <div>
