@@ -429,6 +429,23 @@ export default function Photographs() {
     return <div ref={(el) => (mapDiv = el)} class="map-container" />;
   };
 
+  // --- Navigation Logic ---
+  const navigatePhoto = (direction: "prev" | "next") => {
+    const current = selectedPhoto();
+    if (!current) return;
+
+    const allPhotos = photos();
+    const idx = allPhotos.findIndex(
+      (p) => p.photograph_id === current.photograph_id,
+    );
+
+    if (direction === "prev" && idx > 0) {
+      setSelectedPhoto(allPhotos[idx - 1]);
+    } else if (direction === "next" && idx < allPhotos.length - 1) {
+      setSelectedPhoto(allPhotos[idx + 1]);
+    }
+  };
+
   return (
     <>
       <style>{styles}</style>
@@ -598,10 +615,75 @@ export default function Photographs() {
               ✕
             </button>
             <div class="details-image-container">
+              {/* --- PREV BUTTON --- */}
+              <Show
+                when={
+                  photos().findIndex(
+                    (p) => p.photograph_id === selectedPhoto()?.photograph_id,
+                  ) > 0
+                }
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigatePhoto("prev");
+                  }}
+                  class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
+                  title="Previous"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                    class="w-6 h-6"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.75 19.5L8.25 12l7.5-7.5"
+                    />
+                  </svg>
+                </button>
+              </Show>
               <img
                 src={selectedPhoto()!.photograph_link}
                 alt={selectedPhoto()!.photograph_comments}
               />
+              {/* --- NEXT BUTTON --- */}
+              <Show
+                when={
+                  photos().findIndex(
+                    (p) => p.photograph_id === selectedPhoto()?.photograph_id,
+                  ) <
+                  photos().length - 1
+                }
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigatePhoto("next");
+                  }}
+                  class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
+                  title="Next"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                    class="w-6 h-6"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </button>
+              </Show>
               <a
                 href={selectedPhoto()!.photograph_link}
                 target="_blank"
