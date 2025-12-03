@@ -60,6 +60,33 @@ async function post<T = any>(
 }
 
 /**
+ * Generic HTTP POST for FormData
+ */
+async function postFormData<T = any>(
+  path: string,
+  formData: FormData,
+  options: Omit<RequestOptions, "body"> = {},
+): Promise<T> {
+  const url = interpolate(path, options.params);
+  // Do not set Content-Type header, let browser set it with boundary
+  const fetchOpts: RequestInit = {
+    ...options,
+    method: "POST",
+    body: formData,
+    headers: {
+      ...(options.headers || {}),
+    },
+  };
+  const res = await apiFetch(url, fetchOpts);
+  if (!res.ok) throw new Error(await res.text());
+  try {
+    return await res.json();
+  } catch {
+    return undefined as unknown as T;
+  }
+}
+
+/**
  * Generic HTTP DELETE
  */
 async function del<T = any>(
@@ -89,6 +116,15 @@ async function del<T = any>(
 export const healthApi = {
   server: async () => await get("/api/healthcheck/server"),
   state: async () => await get("/api/healthcheck/state"),
+};
+
+export const photographyApi = {
+  getPhotographs: async (page = 1, pageSize = 20) =>
+    await get(
+      `/api/photography/photographs?page=${page}&page_size=${pageSize}`,
+    ),
+  uploadPhotograph: async (formData: FormData) =>
+    await postFormData("/api/photography/upload", formData),
 };
 
 export const dropdownApi = {
