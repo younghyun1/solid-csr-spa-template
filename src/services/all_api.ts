@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import axios, { AxiosRequestConfig } from "axios";
 
 // Helper to interpolate path params, e.g. /path/{id}
 function interpolate(path: string, params: Record<string, any> = {}) {
@@ -61,29 +62,40 @@ async function post<T = any>(
 
 /**
  * Generic HTTP POST for FormData
+ * Uses Axios so we can get real upload progress events.
  */
 async function postFormData<T = any>(
   path: string,
   formData: FormData,
-  options: Omit<RequestOptions, "body"> = {},
+  options: Omit<RequestOptions, "body"> & {
+    onUploadProgress?: (percent: number) => void;
+  } = {},
 ): Promise<T> {
   const url = interpolate(path, options.params);
-  // Do not set Content-Type header, let browser set it with boundary
-  const fetchOpts: RequestInit = {
-    ...options,
+
+  const config: AxiosRequestConfig<FormData> = {
+    url,
     method: "POST",
-    body: formData,
+    data: formData,
     headers: {
       ...(options.headers || {}),
+      // Let Axios set the correct multipart boundary. If you prefer, you can omit this
+      // header entirely and Axios will infer it from the FormData.
+      "Content-Type": "multipart/form-data",
+    },
+    withCredentials:
+      typeof options.credentials !== "undefined"
+        ? options.credentials === "include"
+        : true,
+    onUploadProgress: (event) => {
+      if (!options.onUploadProgress || !event.total) return;
+      const percent = Math.round((event.loaded * 100) / event.total);
+      options.onUploadProgress(percent);
     },
   };
-  const res = await apiFetch(url, fetchOpts);
-  if (!res.ok) throw new Error(await res.text());
-  try {
-    return await res.json();
-  } catch {
-    return undefined as unknown as T;
-  }
+
+  const res = await axios.request<T>(config);
+  return res.data;
 }
 
 /**
@@ -121,8 +133,13 @@ export const healthApi = {
 export const photographyApi = {
   getPhotographs: async (page = 1, pageSize = 20) =>
     await get(`/api/photographs/get?page=${page}&page_size=${pageSize}`),
-  uploadPhotograph: async (formData: FormData) =>
-    await postFormData("/api/photographs/upload", formData),
+  uploadPhotograph: async (
+    formData: FormData,
+    opts?: { onUploadProgress?: (percent: number) => void },
+  ) =>
+    await postFormData("/api/photographs/upload", formData, {
+      onUploadProgress: opts?.onUploadProgress,
+    }),
 };
 
 export const dropdownApi = {

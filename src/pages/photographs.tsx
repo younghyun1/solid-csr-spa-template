@@ -119,16 +119,17 @@ const styles = `
   }
 }
 .details-image-container {
-  flex: 2;
+  flex: 3;
   background: black;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 400px;
+  padding: 1rem;
 }
 .details-image-container img {
-  max-width: 100%;
-  max-height: 80vh;
+  max-width: calc(100% - 2rem);
+  max-height: calc(100vh - 4rem);
   object-fit: contain;
 }
 .details-info {
@@ -175,6 +176,7 @@ export default function Photographs() {
   const [uploadLat, setUploadLat] = createSignal<number | null>(null);
   const [uploadLon, setUploadLon] = createSignal<number | null>(null);
   const [uploading, setUploading] = createSignal(false);
+  const [uploadProgress, setUploadProgress] = createSignal(0);
 
   // Load photos
   const fetchPhotos = async () => {
@@ -232,14 +234,27 @@ export default function Photographs() {
     }
 
     setUploading(true);
+
+    setUploadProgress(0);
+
     try {
       const formData = new FormData();
+
       formData.append("file", uploadFile()!);
+
       formData.append("comments", uploadComment());
+
       formData.append("lat", String(uploadLat()));
+
       formData.append("lon", String(uploadLon()));
 
-      await photographyApi.uploadPhotograph(formData);
+      await photographyApi.uploadPhotograph(formData, {
+        onUploadProgress: (percent) => {
+          setUploadProgress((prev) => (percent > prev ? percent : prev));
+        },
+      });
+
+      setUploadProgress(100);
 
       // Reset and reload
       setShowUpload(false);
@@ -253,9 +268,12 @@ export default function Photographs() {
       fetchPhotos();
     } catch (err: any) {
       console.error("Upload failed:", err);
+
       alert("Failed to upload photo.");
     } finally {
       setUploading(false);
+
+      setUploadProgress(0);
     }
   };
 
@@ -450,6 +468,20 @@ export default function Photographs() {
                 </Show>
                 <UploadMap />
               </div>
+
+              <Show when={uploading()}>
+                <div class="w-full mt-2">
+                  <div class="w-full bg-gray-200 dark:bg-gray-700 rounded h-2 overflow-hidden">
+                    <div
+                      class="bg-blue-600 h-2 transition-all duration-150"
+                      style={{ width: `${uploadProgress()}%` }}
+                    />
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
+                    {uploadProgress()}%
+                  </p>
+                </div>
+              </Show>
 
               <div class="flex justify-end gap-2 mt-4">
                 <button
