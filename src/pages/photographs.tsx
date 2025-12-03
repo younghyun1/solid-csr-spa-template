@@ -10,6 +10,11 @@ import { photographyApi } from "../services/all_api";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+// --- New Imports for Search ---
+// You need to install: npm install leaflet-geosearch
+import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import "leaflet-geosearch/dist/geosearch.css";
+
 // --- Types ---
 interface PhotographItem {
   photograph_id: string;
@@ -42,38 +47,55 @@ interface GetPhotographsResponse {
 
 // --- Styles ---
 const styles = `
+/* Masonry Layout for Natural Aspect Ratios */
 .photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
+  column-count: 1;
+  column-gap: 1rem;
   width: 100%;
   max-width: 1600px;
+  padding: 1rem;
 }
+@media (min-width: 640px) {
+  .photo-grid { column-count: 2; }
+}
+@media (min-width: 1024px) {
+  .photo-grid { column-count: 3; }
+}
+@media (min-width: 1280px) {
+  .photo-grid { column-count: 4; }
+}
+
 .photo-card {
-  aspect-ratio: 1;
+  break-inside: avoid; /* Prevents image from being cut across columns */
+  margin-bottom: 1rem; /* Space between items vertically */
   border-radius: 0.5rem;
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   background-color: #f3f4f6;
+  display: flex; /* Removes bottom gap of img */
 }
+
 .dark .photo-card {
   background-color: #374151;
 }
 .photo-card:hover {
   transform: scale(1.02);
+  z-index: 10;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 .photo-card img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto; /* Allow natural height */
+  display: block;
 }
+
+/* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -95,7 +117,7 @@ const styles = `
   color: #f3f4f6;
 }
 .upload-modal {
-  width: 600px;
+  width: 700px;
   max-width: 100%;
 }
 .details-modal {
@@ -138,7 +160,7 @@ const styles = `
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   overflow-y: auto;
   min-width: 300px;
 }
@@ -147,7 +169,16 @@ const styles = `
   width: 100%;
   border-radius: 0.5rem;
   margin-top: 0.5rem;
-  z-index: 10;
+  z-index: 1; /* Lower z-index so search results show over it */
+}
+/* Leaflet Geosearch Customization */
+.leaflet-control-geosearch form {
+  background: white;
+  border-radius: 4px;
+  padding: 2px;
+}
+.leaflet-control-geosearch input {
+  color: black;
 }
 .emoji-marker {
   font-size: 2rem;
@@ -235,18 +266,13 @@ export default function Photographs() {
     }
 
     setUploading(true);
-
     setUploadProgress(0);
 
     try {
       const formData = new FormData();
-
       formData.append("file", uploadFile()!);
-
       formData.append("comments", uploadComment());
-
       formData.append("lat", String(uploadLat()));
-
       formData.append("lon", String(uploadLon()));
 
       await photographyApi.uploadPhotograph(formData, {
@@ -269,23 +295,20 @@ export default function Photographs() {
       fetchPhotos();
     } catch (err: any) {
       console.error("Upload failed:", err);
-
       if (err.response?.status === 401 || err.status === 401) {
         window.location.href = `/login?next=${encodeURIComponent(
           window.location.pathname,
         )}`;
         return;
       }
-
       alert("Failed to upload photo.");
     } finally {
       setUploading(false);
-
       setUploadProgress(0);
     }
   };
 
-  // Map Component for Upload
+  // Map Component for Upload (Now with Search)
   const UploadMap = () => {
     let mapDiv: HTMLDivElement | undefined;
     let map: L.Map | null = null;
@@ -310,24 +333,44 @@ export default function Photographs() {
         iconAnchor: [15, 30],
       });
 
-      // Click handler
-      map.on("click", (e) => {
-        const { lat, lng } = e.latlng;
+      // --- ADD SEARCH CONTROL ---
+      const provider = new OpenStreetMapProvider();
+      // @ts-ignore - leaflet-geosearch types can be finicky depending on version
+      const searchControl = new GeoSearchControl({
+        provider: provider,
+        style: "bar",
+        autoClose: true,
+        keepResult: true,
+        showMarker: false, // We manage our own marker
+      });
+
+      map.addControl(searchControl);
+
+      // Listen for search results
+      map.on("geosearch/showlocation", (result: any) => {
+        const { x, y } = result.location; // x=lon, y=lat
+        updateMarker(y, x);
+      });
+
+      // Helper to update state and marker
+      const updateMarker = (lat: number, lng: number) => {
         setUploadLat(lat);
         setUploadLon(lng);
-
         if (marker) {
           marker.setLatLng([lat, lng]);
         } else {
           marker = L.marker([lat, lng], { icon: emojiIcon }).addTo(map!);
         }
+      };
+
+      // Click handler (Manual selection)
+      map.on("click", (e) => {
+        updateMarker(e.latlng.lat, e.latlng.lng);
       });
 
-      // Restore existing selection if any (e.g. if modal closed/reopened, state persists)
+      // Restore existing selection if any
       if (uploadLat() !== null && uploadLon() !== null) {
-        marker = L.marker([uploadLat()!, uploadLon()!], {
-          icon: emojiIcon,
-        }).addTo(map);
+        updateMarker(uploadLat()!, uploadLon()!);
         map.setView([uploadLat()!, uploadLon()!], 10);
       }
     });
@@ -390,7 +433,7 @@ export default function Photographs() {
           <div class="p-4 mb-4 text-red-600 bg-red-100 rounded">{error()}</div>
         </Show>
 
-        {/* Photo Grid */}
+        {/* Photo Grid (Masonry) */}
         <div class="photo-grid">
           <For each={photos()}>
             {(photo) => (
@@ -466,12 +509,12 @@ export default function Photographs() {
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Location (Click on map)
+                  Location (Search or Click on map)
                 </label>
                 <Show when={uploadLat() !== null}>
                   <p class="text-xs text-green-600 mb-1">
-                    Selected: {uploadLat()?.toFixed(4)},{" "}
-                    {uploadLon()?.toFixed(4)}
+                    Selected: {uploadLat()?.toFixed(5)},{" "}
+                    {uploadLon()?.toFixed(5)}
                   </p>
                 </Show>
                 <UploadMap />
@@ -539,6 +582,7 @@ export default function Photographs() {
                 class="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
                 title="Open original"
               >
+                {/* External Link Icon */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -580,7 +624,17 @@ export default function Photographs() {
 
               <div>
                 <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Location
+                  Coordinates
+                </h3>
+                <p class="font-mono text-sm text-gray-900 dark:text-gray-100">
+                  {selectedPhoto()!.photograph_lat.toFixed(6)},{" "}
+                  {selectedPhoto()!.photograph_lon.toFixed(6)}
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Location Map
                 </h3>
                 <div class="mt-2 h-[200px] rounded overflow-hidden">
                   <DetailsMap
