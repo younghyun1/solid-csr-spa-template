@@ -5,13 +5,13 @@ import {
   For,
   Show,
   onMount,
+  createMemo,
 } from "solid-js";
 import { photographyApi } from "../services/all_api";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // --- New Imports for Search ---
-// You need to install: npm install leaflet-geosearch
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
 
@@ -47,36 +47,31 @@ interface GetPhotographsResponse {
 
 // --- Styles ---
 const styles = `
-/* Masonry Layout for Natural Aspect Ratios */
-.photo-grid {
-  column-count: 1;
-  column-gap: 1rem;
+/* Flex Masonry Layout */
+.masonry-grid {
+  display: flex;
   width: 100%;
   max-width: 1600px;
+  gap: 1rem;
   padding: 1rem;
 }
-@media (min-width: 640px) {
-  .photo-grid { column-count: 2; }
-}
-@media (min-width: 1024px) {
-  .photo-grid { column-count: 3; }
-}
-@media (min-width: 1280px) {
-  .photo-grid { column-count: 4; }
+.masonry-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0; /* Prevents flex items from overflowing */
 }
 
 .photo-card {
-  break-inside: avoid; /* Prevents image from being cut across columns */
-  margin-bottom: 1rem; /* Space between items vertically */
   border-radius: 0.5rem;
   overflow: hidden;
   cursor: pointer;
   position: relative;
   transition: transform 0.2s, box-shadow 0.2s;
   background-color: #f3f4f6;
-  display: flex; /* Removes bottom gap of img */
+  width: 100%;
 }
-
 .dark .photo-card {
   background-color: #374151;
 }
@@ -87,7 +82,7 @@ const styles = `
 }
 .photo-card img {
   width: 100%;
-  height: auto; /* Allow natural height */
+  height: auto;
   display: block;
 }
 
@@ -95,7 +90,7 @@ const styles = `
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -169,7 +164,7 @@ const styles = `
   width: 100%;
   border-radius: 0.5rem;
   margin-top: 0.5rem;
-  z-index: 1; /* Lower z-index so search results show over it */
+  z-index: 1;
 }
 /* Leaflet Geosearch Customization */
 .leaflet-control-geosearch form {
@@ -196,6 +191,9 @@ export default function Photographs() {
   const [hasMore, setHasMore] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
 
+  // Layout State for Masonry LTR
+  const [numColumns, setNumColumns] = createSignal(1);
+
   // Modals
   const [selectedPhoto, setSelectedPhoto] = createSignal<PhotographItem | null>(
     null,
@@ -209,6 +207,34 @@ export default function Photographs() {
   const [uploadLon, setUploadLon] = createSignal<number | null>(null);
   const [uploading, setUploading] = createSignal(false);
   const [uploadProgress, setUploadProgress] = createSignal(0);
+
+  // --- Layout Logic: Distribute photos into columns ---
+  // This ensures Photo 1 is Col 1, Photo 2 is Col 2, etc. (LTR visual flow)
+  const columns = createMemo(() => {
+    const cols = Array.from(
+      { length: numColumns() },
+      () => [] as PhotographItem[],
+    );
+    photos().forEach((photo, i) => {
+      cols[i % numColumns()].push(photo);
+    });
+    return cols;
+  });
+
+  // Calculate columns based on window width
+  onMount(() => {
+    const updateColumns = () => {
+      const w = window.innerWidth;
+      if (w >= 1280) setNumColumns(4);
+      else if (w >= 1024) setNumColumns(3);
+      else if (w >= 640) setNumColumns(2);
+      else setNumColumns(1);
+    };
+
+    updateColumns();
+    window.addEventListener("resize", updateColumns);
+    onCleanup(() => window.removeEventListener("resize", updateColumns));
+  });
 
   // Load photos
   const fetchPhotos = async () => {
@@ -236,7 +262,6 @@ export default function Photographs() {
   // Initial load
   onMount(() => {
     fetchPhotos();
-    // Intersection observer for infinite scroll
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore() && !loading()) {
@@ -283,7 +308,6 @@ export default function Photographs() {
 
       setUploadProgress(100);
 
-      // Reset and reload
       setShowUpload(false);
       setUploadFile(null);
       setUploadComment("");
@@ -308,14 +332,13 @@ export default function Photographs() {
     }
   };
 
-  // Map Component for Upload (Now with Search)
+  // Map Component for Upload (With Search)
   const UploadMap = () => {
     let mapDiv: HTMLDivElement | undefined;
     let map: L.Map | null = null;
     let marker: L.Marker | null = null;
 
     onMount(() => {
-      // Default to roughly London or center of world
       const initialPos: [number, number] = [20, 0];
       const zoom = 2;
 
@@ -333,26 +356,23 @@ export default function Photographs() {
         iconAnchor: [15, 30],
       });
 
-      // --- ADD SEARCH CONTROL ---
       const provider = new OpenStreetMapProvider();
-      // @ts-ignore - leaflet-geosearch types can be finicky depending on version
+      // @ts-ignore
       const searchControl = new GeoSearchControl({
         provider: provider,
         style: "bar",
         autoClose: true,
         keepResult: true,
-        showMarker: false, // We manage our own marker
+        showMarker: false,
       });
 
       map.addControl(searchControl);
 
-      // Listen for search results
       map.on("geosearch/showlocation", (result: any) => {
-        const { x, y } = result.location; // x=lon, y=lat
+        const { x, y } = result.location;
         updateMarker(y, x);
       });
 
-      // Helper to update state and marker
       const updateMarker = (lat: number, lng: number) => {
         setUploadLat(lat);
         setUploadLon(lng);
@@ -363,12 +383,10 @@ export default function Photographs() {
         }
       };
 
-      // Click handler (Manual selection)
       map.on("click", (e) => {
         updateMarker(e.latlng.lat, e.latlng.lng);
       });
 
-      // Restore existing selection if any
       if (uploadLat() !== null && uploadLon() !== null) {
         updateMarker(uploadLat()!, uploadLon()!);
         map.setView([uploadLat()!, uploadLon()!], 10);
@@ -433,20 +451,29 @@ export default function Photographs() {
           <div class="p-4 mb-4 text-red-600 bg-red-100 rounded">{error()}</div>
         </Show>
 
-        {/* Photo Grid (Masonry) */}
-        <div class="photo-grid">
-          <For each={photos()}>
-            {(photo) => (
-              <div
-                class="photo-card"
-                onClick={() => setSelectedPhoto(photo)}
-                title={photo.photograph_comments}
-              >
-                <img
-                  src={photo.photograph_thumbnail_link || photo.photograph_link}
-                  alt={photo.photograph_comments}
-                  loading="lazy"
-                />
+        {/* JS-Calculated Masonry Grid */}
+        <div class="masonry-grid">
+          <For each={columns()}>
+            {(colPhotos) => (
+              <div class="masonry-column">
+                <For each={colPhotos}>
+                  {(photo) => (
+                    <div
+                      class="photo-card"
+                      onClick={() => setSelectedPhoto(photo)}
+                      title={photo.photograph_comments}
+                    >
+                      <img
+                        src={
+                          photo.photograph_thumbnail_link ||
+                          photo.photograph_link
+                        }
+                        alt={photo.photograph_comments}
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                </For>
               </div>
             )}
           </For>
@@ -582,7 +609,6 @@ export default function Photographs() {
                 class="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
                 title="Open original"
               >
-                {/* External Link Icon */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
