@@ -145,6 +145,27 @@ const styles = `
   min-height: 400px;
   position: relative;
 }
+.details-image-container {
+  flex: 3;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  position: relative;
+}
+.nav-btn {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+.details-image-container:hover .nav-btn {
+  opacity: 1;
+}
+@media (max-width: 768px) {
+  .nav-btn {
+    opacity: 1;
+  }
+}
 .details-image-container img {
   max-width: 100%;
   max-height: 100%;
@@ -430,19 +451,36 @@ export default function Photographs() {
   };
 
   // --- Navigation Logic ---
-  const navigatePhoto = (direction: "prev" | "next") => {
+  const navigatePhoto = async (direction: "prev" | "next") => {
     const current = selectedPhoto();
     if (!current) return;
 
-    const allPhotos = photos();
-    const idx = allPhotos.findIndex(
+    // Get current list state
+    const currentPhotos = photos();
+    const idx = currentPhotos.findIndex(
       (p) => p.photograph_id === current.photograph_id,
     );
 
     if (direction === "prev" && idx > 0) {
-      setSelectedPhoto(allPhotos[idx - 1]);
-    } else if (direction === "next" && idx < allPhotos.length - 1) {
-      setSelectedPhoto(allPhotos[idx + 1]);
+      setSelectedPhoto(currentPhotos[idx - 1]);
+    } else if (direction === "next") {
+      // If we are not at the end of the loaded list
+      if (idx < currentPhotos.length - 1) {
+        setSelectedPhoto(currentPhotos[idx + 1]);
+      }
+      // If we are at the end, but the API has more pages
+      else if (hasMore() && !loading()) {
+        // Trigger fetch
+        await fetchPhotos();
+
+        // Get the updated list (after fetch completes)
+        const updatedPhotos = photos();
+
+        // Select the next item (which is now at the index that used to be out of bounds)
+        if (updatedPhotos[idx + 1]) {
+          setSelectedPhoto(updatedPhotos[idx + 1]);
+        }
+      }
     }
   };
 
@@ -642,7 +680,8 @@ export default function Photographs() {
                     e.stopPropagation();
                     navigatePhoto("prev");
                   }}
-                  class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
+                  // ADDED: nav-btn class
+                  class="nav-btn absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
                   title="Previous"
                 >
                   <svg
@@ -661,17 +700,20 @@ export default function Photographs() {
                   </svg>
                 </button>
               </Show>
+
               <img
                 src={selectedPhoto()!.photograph_link}
                 alt={selectedPhoto()!.photograph_comments}
               />
+
               {/* --- NEXT BUTTON --- */}
               <Show
                 when={
+                  // CHANGED CONDITION: Show if not last element OR if server has more
                   photos().findIndex(
                     (p) => p.photograph_id === selectedPhoto()?.photograph_id,
                   ) <
-                  photos().length - 1
+                    photos().length - 1 || hasMore()
                 }
               >
                 <button
@@ -679,46 +721,72 @@ export default function Photographs() {
                     e.stopPropagation();
                     navigatePhoto("next");
                   }}
-                  class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
+                  // ADDED: nav-btn class
+                  class="nav-btn absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full z-20 backdrop-blur-sm transition-all hover:scale-110"
                   title="Next"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                    class="w-6 h-6"
+                  {/* Optional: Show spinner if loading next page while hovering next button */}
+                  <Show
+                    when={
+                      loading() &&
+                      photos().findIndex(
+                        (p) =>
+                          p.photograph_id === selectedPhoto()?.photograph_id,
+                      ) ===
+                        photos().length - 1
+                    }
+                    fallback={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        class="w-6 h-6"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                        />
+                      </svg>
+                    }
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
+                    {/* Small Loading Spinner Icon */}
+                    <svg
+                      class="animate-spin w-6 h-6 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      ></path>
+                    </svg>
+                  </Show>
                 </button>
               </Show>
+
+              {/* (Close button and Open Original link remain unchanged) */}
               <a
                 href={selectedPhoto()!.photograph_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
+                // ADDED: nav-btn class (optional, if you want this to fade too)
+                class="nav-btn absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
                 title="Open original"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-5 h-5"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                  />
-                </svg>
+                {/* ... svg ... */}
               </a>
             </div>
             <div class="details-info bg-white dark:bg-gray-800">
