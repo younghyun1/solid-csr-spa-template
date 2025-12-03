@@ -446,6 +446,20 @@ export default function Photographs() {
     }
   };
 
+  createEffect(() => {
+    // Only listen when a photo is selected
+    if (!selectedPhoto()) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") navigatePhoto("prev");
+      if (e.key === "ArrowRight") navigatePhoto("next");
+      if (e.key === "Escape") setSelectedPhoto(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
+  });
+
   return (
     <>
       <style>{styles}</style>
