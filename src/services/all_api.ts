@@ -10,6 +10,7 @@ function interpolate(path: string, params: Record<string, any> = {}) {
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: any;
+
   params?: Record<string, any>;
 };
 
@@ -61,12 +62,18 @@ async function post<T = any>(
 }
 
 /**
+
  * Generic HTTP POST for FormData
+
  * Uses Axios so we can get real upload progress events.
+
  */
+
 async function postFormData<T = any>(
   path: string,
+
   formData: FormData,
+
   options: Omit<RequestOptions, "body"> & {
     onUploadProgress?: (percent: number) => void;
   } = {},
@@ -75,26 +82,41 @@ async function postFormData<T = any>(
 
   const config: AxiosRequestConfig<FormData> = {
     url,
+
     method: "POST",
+
     data: formData,
+
+    // Normalize headers to a plain Record<string, string> so TypeScript is happy
     headers: {
-      ...(options.headers || {}),
+      ...(options.headers
+        ? Object.fromEntries(
+            Object.entries(options.headers as Record<string, string>),
+          )
+        : {}),
       // Let Axios set the correct multipart boundary. If you prefer, you can omit this
+
       // header entirely and Axios will infer it from the FormData.
+
       "Content-Type": "multipart/form-data",
     },
+
     withCredentials:
       typeof options.credentials !== "undefined"
         ? options.credentials === "include"
         : true,
+
     onUploadProgress: (event) => {
       if (!options.onUploadProgress || !event.total) return;
+
       const percent = Math.round((event.loaded * 100) / event.total);
+
       options.onUploadProgress(percent);
     },
   };
 
   const res = await axios.request<T>(config);
+
   return res.data;
 }
 
