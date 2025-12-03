@@ -120,11 +120,9 @@ export const healthApi = {
 
 export const photographyApi = {
   getPhotographs: async (page = 1, pageSize = 20) =>
-    await get(
-      `/api/photography/photographs?page=${page}&page_size=${pageSize}`,
-    ),
+    await get(`/api/photographs/get?page=${page}&page_size=${pageSize}`),
   uploadPhotograph: async (formData: FormData) =>
-    await postFormData("/api/photography/upload", formData),
+    await postFormData("/api/photographs/upload", formData),
 };
 
 export const dropdownApi = {
