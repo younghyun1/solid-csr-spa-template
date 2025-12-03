@@ -147,6 +147,12 @@ const styles = `
   margin-top: 0.5rem;
   z-index: 10;
 }
+.emoji-marker {
+  font-size: 2rem;
+  line-height: 1.2;
+  text-align: center;
+  transform: translateY(-10%);
+}
 `;
 
 export default function Photographs() {
@@ -271,6 +277,13 @@ export default function Photographs() {
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
+      const emojiIcon = L.divIcon({
+        className: "emoji-marker",
+        html: "📍",
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+      });
+
       // Click handler
       map.on("click", (e) => {
         const { lat, lng } = e.latlng;
@@ -280,13 +293,15 @@ export default function Photographs() {
         if (marker) {
           marker.setLatLng([lat, lng]);
         } else {
-          marker = L.marker([lat, lng]).addTo(map!);
+          marker = L.marker([lat, lng], { icon: emojiIcon }).addTo(map!);
         }
       });
 
       // Restore existing selection if any (e.g. if modal closed/reopened, state persists)
       if (uploadLat() !== null && uploadLon() !== null) {
-        marker = L.marker([uploadLat()!, uploadLon()!]).addTo(map);
+        marker = L.marker([uploadLat()!, uploadLon()!], {
+          icon: emojiIcon,
+        }).addTo(map);
         map.setView([uploadLat()!, uploadLon()!], 10);
       }
     });
@@ -376,9 +391,7 @@ export default function Photographs() {
             </span>
           </Show>
           <Show when={!hasMore() && photos().length > 0}>
-            <span class="text-gray-400 dark:text-gray-600">
-              No more photos
-            </span>
+            <span class="text-gray-400 dark:text-gray-600">No more photos</span>
           </Show>
         </div>
       </div>
