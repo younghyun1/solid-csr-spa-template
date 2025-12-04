@@ -123,7 +123,7 @@ export default function HostStatsDashboard(props: {
                 class="text-lg font-bold tracking-wide"
                 style={{ color: C().font }}
               >
-                BACKEND HEALTH
+                SERVER STATS
               </h2>
               <button
                 class="px-3 py-1 text-xs font-semibold rounded hover:opacity-80 transition-opacity"
@@ -226,7 +226,7 @@ export default function HostStatsDashboard(props: {
             </h2>
             <div class="flex-1"></div>
             <div class="text-xs opacity-60" style={{ color: C().font }}>
-              Realtime WebSocket
+              Realtime over WebSocket - custom binary protocol
             </div>
           </div>
 
