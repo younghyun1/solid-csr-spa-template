@@ -130,6 +130,15 @@ const TopBar = () => (
                   Geo-IP Database
                 </a>
               </li>
+
+              <li class="py-1 px-2 md:px-3">
+                <a
+                  href="/backend-stats"
+                  class="whitespace-nowrap no-underline hover:underline transition-colors duration-90"
+                >
+                  Backend Stats
+                </a>
+              </li>
             </ul>
           </nav>
         </div>

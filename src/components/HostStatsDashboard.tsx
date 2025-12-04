@@ -2,6 +2,12 @@ import { onMount, onCleanup, createSignal, Show } from "solid-js";
 import { Line } from "solid-chartjs";
 import type { ChartOptions, ChartData } from "chart.js";
 import { theme } from "../state/theme";
+import {
+  healthState,
+  clientNow,
+  parseUptimeToMs,
+  formatUptimeMs,
+} from "../state/health";
 type HostStatsRaw = {
   cpu_usage: number; // percent, 0–100
   mem_total: number; // bytes
@@ -259,107 +265,189 @@ export default function HostStatsDashboard(props: {
         </div>
       </Show>
 
-      <div
-        class="p-8 rounded-xl shadow-lg border-2 w-[600px]"
-        style={{
-          background: isDark()
-            ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
-            : "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-          "border-color": isDark() ? "#3b82f6" : "#2563eb",
-        }}
-      >
+      <div class="w-full max-w-7xl mx-auto space-y-6">
+        {/* Backend Health Stats Panel */}
         <div
-          class="flex items-center gap-3 mb-4 pb-2 border-b"
-          style={{ "border-color": C().border }}
+          class="p-6 rounded-xl shadow-lg border-2"
+          style={{
+            background: isDark()
+              ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
+              : "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+            "border-color": isDark() ? "#3b82f6" : "#2563eb",
+          }}
         >
           <div
-            class="w-3 h-3 rounded-full animate-pulse"
-            style={{ background: isDark() ? "#10b981" : "#059669" }}
-          ></div>
-          <h2
-            class="text-sm font-bold tracking-wide"
-            style={{ color: C().font }}
+            class="flex items-center gap-3 mb-4 pb-2 border-b border-opacity-20"
+            style={{ "border-color": C().border }}
           >
-            HOST STATS
-          </h2>
-          <div class="flex-1"></div>
-          <div class="text-xs opacity-60" style={{ color: C().font }}>
-            Live
+            <h2
+              class="text-lg font-bold tracking-wide"
+              style={{ color: C().font }}
+            >
+              BACKEND HEALTH
+            </h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {(() => {
+              const hs = healthState();
+              if (!hs)
+                return <div class="col-span-full">Loading health stats...</div>;
+
+              const baselineMs =
+                hs.baseline_uptime_ms ?? parseUptimeToMs(hs.server_uptime);
+              const baselineTs = hs.baseline_timestamp ?? hs.timestamp;
+              let liveUptime: string = hs.server_uptime;
+              if (baselineMs != null && baselineTs) {
+                const base = new Date(baselineTs);
+                const now = clientNow() ?? new Date();
+                const extra = now.getTime() - base.getTime();
+                const totalMs =
+                  baselineMs +
+                  (Number.isFinite(extra) ? Math.max(extra, 0) : 0);
+                liveUptime = formatUptimeMs(totalMs);
+              }
+
+              return (
+                <>
+                  <div
+                    class="p-4 rounded-lg bg-opacity-50"
+                    style={{ background: C().cardBg }}
+                  >
+                    <div class="text-xs opacity-70 mb-1">Uptime</div>
+                    <div class="text-xl font-mono font-bold">{liveUptime}</div>
+                  </div>
+                  <div
+                    class="p-4 rounded-lg bg-opacity-50"
+                    style={{ background: C().cardBg }}
+                  >
+                    <div class="text-xs opacity-70 mb-1">Responses Handled</div>
+                    <div class="text-xl font-mono font-bold">
+                      {hs.responses_handled.toLocaleString()}
+                    </div>
+                  </div>
+                  <div
+                    class="p-4 rounded-lg bg-opacity-50"
+                    style={{ background: C().cardBg }}
+                  >
+                    <div class="text-xs opacity-70 mb-1">Active Sessions</div>
+                    <div class="text-xl font-mono font-bold">
+                      {hs.users_logged_in}
+                    </div>
+                  </div>
+                  <div
+                    class="p-4 rounded-lg bg-opacity-50"
+                    style={{ background: C().cardBg }}
+                  >
+                    <div class="text-xs opacity-70 mb-1">DB Latency</div>
+                    <div class="text-xl font-mono font-bold">
+                      {hs.db_latency}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
 
-        <div class="flex gap-8">
-          {/* CPU CARD */}
-          <div class="flex-1">
+        {/* Live Host Stats Panel */}
+        <div
+          class="p-6 rounded-xl shadow-lg border-2"
+          style={{
+            background: isDark()
+              ? "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
+              : "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+            "border-color": isDark() ? "#3b82f6" : "#2563eb",
+          }}
+        >
+          <div
+            class="flex items-center gap-3 mb-6 pb-2 border-b"
+            style={{ "border-color": C().border }}
+          >
             <div
-              class="relative h-36 border rounded-lg shadow-sm"
-              style={{
-                border: isDark() ? "#1e40af" : "#3b82f6",
-                background: isDark()
-                  ? "rgba(30, 64, 175, 0.1)"
-                  : "rgba(59, 130, 246, 0.05)",
-              }}
+              class="w-3 h-3 rounded-full animate-pulse"
+              style={{ background: isDark() ? "#10b981" : "#059669" }}
+            ></div>
+            <h2
+              class="text-lg font-bold tracking-wide"
+              style={{ color: C().font }}
             >
-              <div class="absolute top-2 left-2 flex items-center gap-1">
-                <div
-                  class="w-2 h-2 rounded-full"
-                  style={{ background: C().cpu }}
-                ></div>
-                <div class="text-xs font-semibold" style={{ color: C().cpu }}>
-                  CPU Usage
-                </div>
-              </div>
-              <div class="chart-wrapper absolute inset-0 pt-7 pb-8 px-3">
-                <Line data={cpuData()} options={cpuOpts()} />
-              </div>
-              <div class="absolute bottom-2 left-2">
-                <div
-                  class="text-lg font-bold font-mono"
-                  style={{ color: C().cpu }}
-                >
-                  {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
-                </div>
-                <div class="text-xs opacity-60" style={{ color: C().font }}>
-                  Current
-                </div>
-              </div>
+              LIVE HOST METRICS
+            </h2>
+            <div class="flex-1"></div>
+            <div class="text-xs opacity-60" style={{ color: C().font }}>
+              Realtime WebSocket
             </div>
           </div>
 
-          {/* MEMORY CARD */}
-          <div class="flex-1">
-            <div
-              class="relative h-36 border rounded-lg shadow-sm"
-              style={{
-                border: isDark() ? "#059669" : "#10b981",
-                background: isDark()
-                  ? "rgba(5, 150, 105, 0.1)"
-                  : "rgba(16, 185, 129, 0.05)",
-              }}
-            >
-              <div class="absolute top-2 left-2 flex items-center gap-1">
-                <div
-                  class="w-2 h-2 rounded-full"
-                  style={{ background: C().memU }}
-                ></div>
-                <div class="text-xs font-semibold" style={{ color: C().memU }}>
-                  Memory Usage
+          <div class="flex flex-col md:flex-row gap-6 h-[500px]">
+            {/* CPU CARD */}
+            <div class="flex-1 flex flex-col">
+              <div
+                class="relative flex-1 border rounded-lg shadow-sm flex flex-col"
+                style={{
+                  border: isDark() ? "#1e40af" : "#3b82f6",
+                  background: isDark()
+                    ? "rgba(30, 64, 175, 0.1)"
+                    : "rgba(59, 130, 246, 0.05)",
+                }}
+              >
+                <div class="p-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="w-3 h-3 rounded-full"
+                      style={{ background: C().cpu }}
+                    ></div>
+                    <div class="font-bold text-lg" style={{ color: C().cpu }}>
+                      CPU Usage
+                    </div>
+                  </div>
+                  <div
+                    class="text-2xl font-bold font-mono"
+                    style={{ color: C().cpu }}
+                  >
+                    {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
+                  </div>
+                </div>
+
+                <div class="chart-wrapper flex-1 w-full px-2 pb-2 min-h-0">
+                  <Line data={cpuData()} options={cpuOpts()} />
                 </div>
               </div>
-              <div class="chart-wrapper absolute inset-0 pt-7 pb-8 px-3">
-                <Line data={memData()} options={memOpts()} />
-              </div>
-              <div class="absolute bottom-2 left-2">
-                <div
-                  class="text-xs font-bold font-mono"
-                  style={{ color: C().memU }}
-                >
-                  {latest()
-                    ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
-                    : "--/--"}
+            </div>
+
+            {/* MEMORY CARD */}
+            <div class="flex-1 flex flex-col">
+              <div
+                class="relative flex-1 border rounded-lg shadow-sm flex flex-col"
+                style={{
+                  border: isDark() ? "#059669" : "#10b981",
+                  background: isDark()
+                    ? "rgba(5, 150, 105, 0.1)"
+                    : "rgba(16, 185, 129, 0.05)",
+                }}
+              >
+                <div class="p-4 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="w-3 h-3 rounded-full"
+                      style={{ background: C().memU }}
+                    ></div>
+                    <div class="font-bold text-lg" style={{ color: C().memU }}>
+                      Memory
+                    </div>
+                  </div>
+                  <div
+                    class="text-xl font-bold font-mono text-right"
+                    style={{ color: C().memU }}
+                  >
+                    {latest()
+                      ? `${formatMem(latest()!.memT - latest()!.memF)} / ${formatMem(latest()!.memT)}`
+                      : "--/--"}
+                  </div>
                 </div>
-                <div class="text-xs opacity-60" style={{ color: C().font }}>
-                  Used / Total
+
+                <div class="chart-wrapper flex-1 w-full px-2 pb-2 min-h-0">
+                  <Line data={memData()} options={memOpts()} />
                 </div>
               </div>
             </div>

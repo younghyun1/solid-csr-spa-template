@@ -50,6 +50,10 @@ export const routes: RouteDefinition[] = [
     component: lazy(() => import("./pages/geo_ip_info")),
   },
   {
+    path: "/backend-stats",
+    component: lazy(() => import("./pages/backend_stats")),
+  },
+  {
     path: "/login",
     component: lazy(() => import("./pages/login")),
   },

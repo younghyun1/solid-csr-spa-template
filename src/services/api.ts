@@ -14,7 +14,7 @@ declare const __APP_NAME__: string;
 
 import { setAuthenticated, setUser } from "../state/auth";
 
-import { setServerBuildInfo } from "../app";
+import { setServerBuildInfo } from "../state/server_info";
 
 // Shape of /api/healthcheck/state (RootHandlerResponse wrapper)
 export type HealthStateResponse = {
