@@ -19,7 +19,7 @@ export default function CpuStatsCard(props: {
   function makeGradient(
     ctx: CanvasRenderingContext2D,
     area: any,
-    color: string
+    color: string,
   ) {
     const grad = ctx.createLinearGradient(0, area.top, 0, area.bottom);
     grad.addColorStop(0, color);
@@ -38,7 +38,7 @@ export default function CpuStatsCard(props: {
     const s = props.data;
     const blanks = Array(Math.max(0, props.limit - s.length)).fill("");
     const times = s.map((s) =>
-      new Date(s.ts).toLocaleTimeString(undefined, { hour12: false })
+      new Date(s.ts).toLocaleTimeString(undefined, { hour12: false }),
     );
     return [...blanks, ...times];
   };
@@ -90,32 +90,35 @@ export default function CpuStatsCard(props: {
   });
 
   return (
-    <div
-      class="relative flex-1 border rounded-lg shadow-sm flex flex-col min-h-[300px]"
-      style={{
-        border: isDark() ? "1px solid #1e40af" : "1px solid #3b82f6",
-        background: isDark()
-          ? "rgba(30, 64, 175, 0.1)"
-          : "rgba(59, 130, 246, 0.05)",
-      }}
-    >
-      <div class="p-4 flex items-center justify-between">
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-2">
           <div
-            class="w-3 h-3 rounded-full"
+            class="w-2 h-2 rounded-full"
             style={{ background: C().cpu }}
           ></div>
-          <div class="font-bold text-lg" style={{ color: C().cpu }}>
+          <h3
+            class="text-sm font-bold uppercase tracking-wider opacity-80"
+            style={{ color: C().font }}
+          >
             CPU Usage
-          </div>
+          </h3>
         </div>
-        <div class="text-2xl font-bold font-mono" style={{ color: C().cpu }}>
+        <div class="text-xl font-mono font-bold" style={{ color: C().cpu }}>
           {latest() ? latest()!.cpu.toFixed(1) + "%" : "--%"}
         </div>
       </div>
 
-      <div class="chart-wrapper flex-1 w-full px-2 pb-2 min-h-0">
-        <Line data={chartData()} options={chartOptions()} />
+      <div
+        class="relative flex-1 border rounded-xl shadow-sm overflow-hidden min-h-[250px]"
+        style={{
+          border: `1px solid ${C().border}`,
+          background: C().bg,
+        }}
+      >
+        <div class="absolute inset-0 p-4">
+          <Line data={chartData()} options={chartOptions()} />
+        </div>
       </div>
     </div>
   );
