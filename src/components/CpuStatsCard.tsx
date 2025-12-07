@@ -29,7 +29,7 @@ export default function CpuStatsCard(props: {
 
   function padToLimit<T>(arr: T[], filler: any = null): (T | null)[] {
     const padLen = Math.max(0, props.limit - arr.length);
-    return [...Array(padLen).fill(filler), ...arr];
+    return [...arr, ...Array(padLen).fill(filler)];
   }
 
   const latest = () => props.data[props.data.length - 1];
@@ -40,7 +40,7 @@ export default function CpuStatsCard(props: {
     const times = s.map((s) =>
       new Date(s.ts).toLocaleTimeString(undefined, { hour12: false }),
     );
-    return [...blanks, ...times];
+    return [...times, ...blanks];
   };
 
   const chartData = (): ChartData<"line"> => ({

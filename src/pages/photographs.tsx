@@ -555,7 +555,14 @@ export default function Photographs() {
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Photographs
           </h1>
-          <button onClick={() => setShowUpload(true)}>Upload Photo</button>
+          <Show when={user()?.user_info?.user_id}>
+            <button
+              class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+              onClick={() => setShowUpload(true)}
+            >
+              Upload Photo
+            </button>
+          </Show>
 
           <div class="flex gap-2 ml-4">
             <Show when={user()?.user_info?.user_id}>
