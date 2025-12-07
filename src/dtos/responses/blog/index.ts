@@ -99,3 +99,11 @@ export interface SubmitCommentResponse {
   user_name: string;
   user_profile_picture_url: string;
 }
+
+export interface DeletePostResponse {
+  deleted_post_id: string;
+}
+
+export interface DeleteCommentResponse {
+  deleted_comment_id: string;
+}

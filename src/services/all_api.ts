@@ -162,6 +162,11 @@ export const photographyApi = {
     await postFormData("/api/photographs/upload", formData, {
       onUploadProgress: opts?.onUploadProgress,
     }),
+  deletePhotographs: async (photograph_ids: string[]) =>
+    await del("/api/photographs/delete", {
+      body: JSON.stringify({ photograph_ids }),
+      headers: { "Content-Type": "application/json" },
+    }),
 };
 
 export const dropdownApi = {
@@ -283,6 +288,8 @@ import type {
   SubmitPostResponse,
   VoteCommentResponse,
   VotePostResponse,
+  DeletePostResponse,
+  DeleteCommentResponse,
 } from "../dtos/responses/blog";
 
 export const geoIpApi = {
@@ -328,6 +335,15 @@ export const blogApi = {
     await post<ApiResponse<SubmitCommentResponse>>(
       "/api/blog/{post_id}/comment",
       { body, params: { post_id } },
+    ),
+  deletePost: async (post_id: string) =>
+    await del<ApiResponse<DeletePostResponse>>("/api/blog/{post_id}", {
+      params: { post_id },
+    }),
+  deleteComment: async (post_id: string, comment_id: string) =>
+    await del<ApiResponse<DeleteCommentResponse>>(
+      "/api/blog/{post_id}/{comment_id}",
+      { params: { post_id, comment_id } },
     ),
 };
 

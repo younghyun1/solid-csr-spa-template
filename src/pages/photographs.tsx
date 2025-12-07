@@ -204,6 +204,8 @@ const styles = `
 }
 `;
 
+import { isAuthenticated, user } from "../state/auth";
+
 export default function Photographs() {
   // State
   const [photos, setPhotos] = createSignal<PhotographItem[]>([]);
@@ -220,6 +222,12 @@ export default function Photographs() {
     null,
   );
   const [showUpload, setShowUpload] = createSignal(false);
+
+  // Selection Mode State
+  const [isSelectionMode, setIsSelectionMode] = createSignal(false);
+  const [selectedForDeletion, setSelectedForDeletion] = createSignal<
+    Set<string>
+  >(new Set());
 
   // Upload Form State
   const [uploadFile, setUploadFile] = createSignal<File | null>(null);
@@ -241,6 +249,40 @@ export default function Photographs() {
     });
     return cols;
   });
+
+  const handleDelete = async () => {
+    const ids = Array.from(selectedForDeletion());
+    if (ids.length === 0) return;
+    if (
+      !confirm(
+        `Are you sure you want to delete ${ids.length} photos? This cannot be undone.`,
+      )
+    )
+      return;
+
+    try {
+      setLoading(true);
+      await photographyApi.deletePhotographs(ids);
+      setPhotos((prev) =>
+        prev.filter((p) => !selectedForDeletion().has(p.photograph_id)),
+      );
+      setIsSelectionMode(false);
+      setSelectedForDeletion(new Set<string>());
+    } catch (e) {
+      alert("Failed to delete photographs: " + e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedForDeletion((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   // Calculate columns based on window width
   onMount(() => {
@@ -489,9 +531,15 @@ export default function Photographs() {
     if (!selectedPhoto()) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedPhoto()) setSelectedPhoto(null);
+        else if (isSelectionMode()) {
+          setIsSelectionMode(false);
+          setSelectedForDeletion(new Set<string>());
+        }
+      }
       if (e.key === "ArrowLeft") navigatePhoto("prev");
       if (e.key === "ArrowRight") navigatePhoto("next");
-      if (e.key === "Escape") setSelectedPhoto(null);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -507,12 +555,40 @@ export default function Photographs() {
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Photographs
           </h1>
-          <button
-            onClick={() => setShowUpload(true)}
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Upload Photo
-          </button>
+          <button onClick={() => setShowUpload(true)}>Upload Photo</button>
+
+          <div class="flex gap-2 ml-4">
+            <Show when={user()?.user_info?.user_id}>
+              <Show
+                when={isSelectionMode()}
+                fallback={
+                  <button
+                    class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-2 rounded shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                    onClick={() => setIsSelectionMode(true)}
+                  >
+                    Select
+                  </button>
+                }
+              >
+                <button
+                  class="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={selectedForDeletion().size === 0 || loading()}
+                  onClick={handleDelete}
+                >
+                  Delete ({selectedForDeletion().size})
+                </button>
+                <button
+                  class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-4 py-2 rounded shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                  onClick={() => {
+                    setIsSelectionMode(false);
+                    setSelectedForDeletion(new Set<string>());
+                  }}
+                >
+                  Cancel
+                </button>
+              </Show>
+            </Show>
+          </div>
         </div>
 
         {/* Error Message */}
@@ -529,7 +605,13 @@ export default function Photographs() {
                   {(photo) => (
                     <div
                       class="photo-card"
-                      onClick={() => setSelectedPhoto(photo)}
+                      onClick={() => {
+                        if (isSelectionMode()) {
+                          toggleSelection(photo.photograph_id);
+                        } else {
+                          setSelectedPhoto(photo);
+                        }
+                      }}
                       title={photo.photograph_comments}
                     >
                       <img
@@ -540,6 +622,33 @@ export default function Photographs() {
                         alt={photo.photograph_comments}
                         loading="lazy"
                       />
+                      <Show when={isSelectionMode()}>
+                        <div
+                          class={`absolute inset-0 transition-all z-10 ${
+                            selectedForDeletion().has(photo.photograph_id)
+                              ? "ring-4 ring-red-500 ring-inset bg-black/20"
+                              : "hover:bg-black/10"
+                          }`}
+                        >
+                          <div
+                            class={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${
+                              selectedForDeletion().has(photo.photograph_id)
+                                ? "bg-red-500"
+                                : "bg-black/40"
+                            }`}
+                          >
+                            <Show
+                              when={selectedForDeletion().has(
+                                photo.photograph_id,
+                              )}
+                            >
+                              <span class="text-white text-xs font-bold">
+                                ✓
+                              </span>
+                            </Show>
+                          </div>
+                        </div>
+                      </Show>
                     </div>
                   )}
                 </For>

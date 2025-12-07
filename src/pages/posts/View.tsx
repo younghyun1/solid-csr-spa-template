@@ -1,8 +1,8 @@
 import { Show, createSignal, createResource, For, createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
-import { useParams } from "@solidjs/router";
+import { useParams, useNavigate } from "@solidjs/router";
 import { blogApi, dropdownApi } from "../../services/all_api";
-import { isAuthenticated } from "../../state/auth";
+import { isAuthenticated, user } from "../../state/auth";
 
 // VoteState Mapping based on Rust Enum:
 // 0: Upvoted
@@ -12,6 +12,7 @@ type VoteState = 0 | 1 | 2;
 
 export default function PostViewPage() {
   const params = useParams();
+  const navigate = useNavigate();
   const postId = () => params.post_id;
   const [commentValue, setCommentValue] = createSignal("");
   const [commentLoading, setCommentLoading] = createSignal(false);
@@ -81,6 +82,26 @@ export default function PostViewPage() {
   const [replyError, setReplyError] = createStore<
     Record<string, string | null>
   >({});
+
+  const handleDeletePost = async () => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await blogApi.deletePost(postId());
+      navigate("/blog");
+    } catch (e) {
+      alert("Failed to delete post: " + e);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      await blogApi.deleteComment(postId(), commentId);
+      refetch();
+    } catch (e) {
+      alert("Failed to delete comment: " + e);
+    }
+  };
 
   const handleVote = async (
     type: "post" | "comment",
@@ -383,13 +404,26 @@ export default function PostViewPage() {
                   ▼
                 </button>
               </div>
-              <div class="mt-1">
+              <div class="mt-1 flex gap-3">
                 <button
                   class="text-xs text-blue-600 hover:underline dark:text-blue-400"
                   onClick={() => toggleReply(comment.comment_id)}
                 >
                   Reply
                 </button>
+                <Show
+                  when={
+                    user()?.user_info?.user_id &&
+                    (comment as any).user_id === user()?.user_info?.user_id
+                  }
+                >
+                  <button
+                    class="text-xs text-red-600 hover:underline dark:text-red-400"
+                    onClick={() => handleDeleteComment(comment.comment_id)}
+                  >
+                    Delete
+                  </button>
+                </Show>
               </div>
               <Show when={replyOpen[comment.comment_id]}>
                 <div class="mt-2">
@@ -500,9 +534,25 @@ export default function PostViewPage() {
                     </button>
                   </div>
                   <div class="flex-1">
-                    <h1 class="text-3xl font-bold mb-2">
-                      {data().post.post_title}
-                    </h1>
+                    <div class="flex justify-between items-start mb-2">
+                      <h1 class="text-3xl font-bold">
+                        {data().post.post_title}
+                      </h1>
+                      <Show
+                        when={
+                          user()?.user_info?.user_id &&
+                          (data().post as any).user_id ===
+                            user()?.user_info?.user_id
+                        }
+                      >
+                        <button
+                          class="text-sm text-red-600 border border-red-600 rounded px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 transition whitespace-nowrap ml-4"
+                          onClick={handleDeletePost}
+                        >
+                          Delete Post
+                        </button>
+                      </Show>
+                    </div>
                     <div class="flex items-center text-sm text-gray-400 mb-2">
                       <Show
                         when={data().user_badge_info?.user_profile_picture_url}

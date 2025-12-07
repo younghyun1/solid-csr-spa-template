@@ -1,10 +1,22 @@
 import { A, useNavigate } from "@solidjs/router";
 import { createResource, Show, For } from "solid-js"; // Import For
 import { blogApi } from "../../services/all_api";
+import { user } from "../../state/auth";
 
 export default function PostsList() {
-  const [posts] = createResource(() => blogApi.getPosts());
+  const [posts, { refetch }] = createResource(() => blogApi.getPosts());
   const navigate = useNavigate();
+
+  const handleDeletePost = async (e: Event, postId: string) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    try {
+      await blogApi.deletePost(postId);
+      refetch();
+    } catch (e) {
+      alert("Failed to delete post: " + e);
+    }
+  };
 
   return (
     <main class="w-full mx-auto py-8 px-8">
@@ -69,6 +81,19 @@ export default function PostsList() {
                       <span>
                         {new Date(post.post_created_at).toLocaleDateString()}
                       </span>
+                      <Show
+                        when={
+                          user()?.user_info?.user_id &&
+                          (post as any).user_id === user()?.user_info?.user_id
+                        }
+                      >
+                        <button
+                          class="ml-auto text-red-600 hover:text-red-800 hover:underline"
+                          onClick={(e) => handleDeletePost(e, post.post_id)}
+                        >
+                          Delete
+                        </button>
+                      </Show>
                     </div>
 
                     <A
