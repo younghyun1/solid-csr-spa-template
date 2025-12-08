@@ -19,7 +19,8 @@ export default function About() {
               Young Hyun Chi / 지영현 / 池營賢 / 池营贤
             </h3>
             <p class="text-gray-600 dark:text-gray-400">
-              Backend Software Engineer · Rust / Infra / Data Pipelines
+              Backend Software Engineer · Very High Performance Backends /
+              Infrastructure / Data Pipelines / SolidJS
             </p>
           </div>
           <div class="flex flex-wrap gap-2 mb-6">
