@@ -7,22 +7,82 @@ export default function About() {
         <div class="border-l-4 border-sky-500 dark:border-sky-400 pl-3 mb-8">
           <h1 class="text-2xl font-bold mb-1 tracking-tight">About</h1>
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Last updated: 2025-11-30
+            Last updated: 2025-12-08
           </p>
         </div>
+
         <section class="mb-12">
           <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">
             1. Introduction
           </h2>
-          <div class="mb-4">
-            <h3 class="text-lg font-semibold">
-              Young Hyun Chi / 지영현 / 池營賢 / 池营贤
-            </h3>
-            <p class="text-gray-600 dark:text-gray-400">
-              Backend Software Engineer · Very High Performance Backends /
-              Infrastructure / Data Pipelines / SolidJS
-            </p>
+
+          <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-semibold">
+                Young Hyun Chi / 지영현 / 池營賢 / 池营贤
+              </h3>
+
+              <p class="text-gray-600 dark:text-gray-400">
+                Backend Software Engineer · Rust / Infrastructure / Data
+                Pipelines / SolidJS
+              </p>
+            </div>
+
+            <figure class="flex flex-col items-center sm:items-end text-sm text-gray-500 dark:text-gray-400">
+              <a
+                href="https://cyhdev-img.s3.us-west-1.amazonaws.com/images/05da63f0-0a8e-4d96-807f-280ded45a6d5.avif"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://cyhdev-img.s3.us-west-1.amazonaws.com/thumbnails/05da63f0-0a8e-4d96-807f-280ded45a6d5.avif"
+                  alt="Portrait"
+                  class="h-28 w-28 rounded-full object-cover shadow-sm ring-2 ring-white/70 dark:ring-gray-800"
+                  loading="lazy"
+                />
+              </a>
+              <figcaption class="mt-1 text-xs text-gray-500 dark:text-gray-500 text-center sm:text-right max-w-[11rem]"></figcaption>
+            </figure>
           </div>
+          <div>
+            <h3 class="font-bold mb-2">Contact</h3>
+            <ul class="list-none space-y-2 text-sm">
+              <li>
+                <span class="w-20 inline-block font-medium text-gray-500">
+                  Email:
+                </span>
+                <a
+                  href="mailto:younghyun1@gmail.com"
+                  class="text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  younghyun1@gmail.com
+                </a>
+              </li>
+              <li>
+                <span class="w-20 inline-block font-medium text-gray-500">
+                  GitHub:
+                </span>
+                <a
+                  href="https://github.com/younghyun1"
+                  class="text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  github.com/younghyun1
+                </a>
+              </li>
+              <li>
+                <span class="w-20 inline-block font-medium text-gray-500">
+                  LinkedIn:
+                </span>
+                <a
+                  href="https://linkedin.com/in/younghyun-chi-a60b59a9"
+                  class="text-sky-600 dark:text-sky-400 hover:underline"
+                >
+                  linkedin.com/in/younghyun-chi-a60b59a9
+                </a>
+              </li>
+            </ul>
+          </div>
+          <br></br>
           <div class="flex flex-wrap gap-2 mb-6">
             <img
               src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=orange"
@@ -31,6 +91,10 @@ export default function About() {
             <img
               src="https://img.shields.io/badge/C-A8B9CC?style=for-the-badge&logo=c&logoColor=white"
               alt="C"
+            />
+            <img
+              src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"
+              alt="TypeScript"
             />
             <img
               src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=green"
@@ -45,20 +109,80 @@ export default function About() {
               alt="Axum"
             />
             <img
+              src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"
+              alt="Spring Boot"
+            />
+            <img
+              src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white"
+              alt="Django"
+            />
+            <img
               src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white"
               alt="PostgreSQL"
+            />
+            <img
+              src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"
+              alt="MySQL"
             />
             <img
               src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white"
               alt="AWS"
             />
             <img
+              src="https://img.shields.io/badge/Google%20Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white"
+              alt="Google Cloud"
+            />
+            <img
               src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"
               alt="Docker"
             />
             <img
+              src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white"
+              alt="Kubernetes"
+            />
+            <img
+              src="https://img.shields.io/badge/NGINX-009639?style=for-the-badge&logo=nginx&logoColor=white"
+              alt="NGINX"
+            />
+            <img
               src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"
               alt="Linux"
+            />
+            <img
+              src="https://img.shields.io/badge/Arch%20Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white"
+              alt="Arch Linux"
+            />
+            <img
+              src="https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white"
+              alt="Ubuntu"
+            />
+            <img
+              src="https://img.shields.io/badge/Amazon%20Linux-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=FF9900"
+              alt="Amazon Linux"
+            />
+            <img
+              src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white"
+              alt="Windows"
+            />
+            <img
+              src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white"
+              alt="macOS"
+            />
+            <img
+              src="https://img.shields.io/badge/Protocol%20Buffers-3367D6?style=for-the-badge&logo=google&logoColor=white"
+              alt="Protocol Buffers"
+            />
+            <img
+              src="https://img.shields.io/badge/BACnet-004B87?style=for-the-badge&logo=home-assistant&logoColor=white"
+              alt="BACnet"
+            />
+            <img
+              src="https://img.shields.io/badge/Modbus-FFCC00?style=for-the-badge&logo=modin&logoColor=000000"
+              alt="Modbus"
+            />
+            <img
+              src="https://img.shields.io/badge/WebSockets-010101?style=for-the-badge&logo=socketdotio&logoColor=white"
+              alt="WebSockets"
             />
           </div>
           <p class="mb-4 leading-relaxed">
@@ -71,23 +195,27 @@ export default function About() {
             and scraper-based YouTube channel analyzer for a firm serving
             content creators on GCP; and building backends and data pipelines
             for a K-Pop group's fan app as well as Hyundai Motor Company's
-            Hyundai, Kia, and Genesis apps.
+            Hyundai, Kia, and Genesis car app for Android and iOS.
           </p>
           <p class="mb-4 leading-relaxed">
             I helped pioneer the use of Rust webservers in the Korean startup
-            ecosystem. I mentored colleagues who have since moved on to write
-            Rust at other companies. I believe in building web services that
-            leverage the performance and safety of modern compilation
-            infrastructure to create secure, reliable systems.
+            ecosystem; several colleagues whom I've helped picked up the
+            language have since moved on to write Rust at other companies. I
+            believe in building web services that leverage the actual
+            performance of modern compute resources as well as innovations in
+            programming languages and compilation infrastructures to create
+            fast, secure, reliable systems.
           </p>
           <p class="mb-4 leading-relaxed">
-            I am proud to have worked across diverse fields and cultures. I
-            served for 21 months near the North Korean border, working with both
-            US and Korean military personnel. During my studies, I also worked
-            professionally in journalism, photography, and translation. I have
-            also performed manual labor in warehouses and logistics centers.
-            Since 2023, I have focused on backend engineering. As of late 2025,
-            I am adjusting to life in Colorado after getting married.
+            I am proud to have worked across diverse fields with a range of
+            coworkers from many cultures and backgrounds. From 2016 to 2017, I
+            served for 21 months near the North Korean border with the 2nd
+            Infantry Division of the US Army, working with both US and Korean
+            military personnel. During my studies, I also worked professionally
+            in journalism, photography, and translation. I have also performed
+            manual labor in warehouses and logistics centers. Since 2023, I have
+            focused on backend engineering. As of late 2025, I am adjusting to
+            life in Colorado after getting married.
           </p>
         </section>
 
@@ -411,28 +539,6 @@ export default function About() {
               </ul>
             </div>
           </div>
-
-          <div class="mt-6">
-            <h3 class="font-bold mb-3 text-lg">Technical Interests</h3>
-            <ul class="flex flex-wrap gap-2 text-sm">
-              {[
-                "High-throughput webservers",
-                "Low-latency APIs",
-                "Cache hierarchy",
-                "Concurrency & Asynchrony",
-                "On-prem infrastructure",
-                "Cost optimization",
-                "CI/CD",
-                "CLI tooling",
-                "Compilers",
-                "Construction engineering",
-              ].map((tag) => (
-                <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300">
-                  {tag}
-                </span>
-              ))}
-            </ul>
-          </div>
         </section>
 
         {/* 6) Hobbies */}
@@ -502,45 +608,6 @@ export default function About() {
                 <li>Rudimentary French, German, Spanish, Mandarin</li>
               </ul>
             </div>
-          </div>
-
-          <div>
-            <h3 class="font-bold mb-2">Contact</h3>
-            <ul class="list-none space-y-2 text-sm">
-              <li>
-                <span class="w-20 inline-block font-medium text-gray-500">
-                  Email:
-                </span>
-                <a
-                  href="mailto:younghyun1@gmail.com"
-                  class="text-sky-600 dark:text-sky-400 hover:underline"
-                >
-                  younghyun1@gmail.com
-                </a>
-              </li>
-              <li>
-                <span class="w-20 inline-block font-medium text-gray-500">
-                  GitHub:
-                </span>
-                <a
-                  href="https://github.com/younghyun1"
-                  class="text-sky-600 dark:text-sky-400 hover:underline"
-                >
-                  github.com/younghyun1
-                </a>
-              </li>
-              <li>
-                <span class="w-20 inline-block font-medium text-gray-500">
-                  LinkedIn:
-                </span>
-                <a
-                  href="https://linkedin.com/in/younghyun-chi-a60b59a9"
-                  class="text-sky-600 dark:text-sky-400 hover:underline"
-                >
-                  linkedin.com/in/younghyun-chi-a60b59a9
-                </a>
-              </li>
-            </ul>
           </div>
         </section>
       </section>
