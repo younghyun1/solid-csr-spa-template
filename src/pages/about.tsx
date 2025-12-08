@@ -231,7 +231,7 @@ export default function About() {
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">GenesisNest</h3>
                 <span class="text-sm font-mono text-gray-500">
-                  Seongnam, KR | Jan 2025 - Jul 2025
+                  Seongnam, South Korea | Jan 2025 - Jul 2025
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -267,7 +267,7 @@ export default function About() {
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">pampam Inc</h3>
                 <span class="text-sm font-mono text-gray-500">
-                  Seoul, KR | Nov 2024 - Dec 2024
+                  Seoul, South Korea | Nov 2024 - Dec 2024
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -295,7 +295,7 @@ export default function About() {
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">EAN Technology Co. Ltd</h3>
                 <span class="text-sm font-mono text-gray-500">
-                  Seoul, KR | Aug 2023 - Aug 2024
+                  Seoul, South Korea | Aug 2023 - Aug 2024
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -379,7 +379,7 @@ export default function About() {
                   Korea Institute of Maritime Science and Technology
                 </h3>
                 <span class="text-sm font-mono text-gray-500">
-                  Seoul, KR | Jun-Jul 2023, Aug 2024
+                  Seoul, South Korea | Jun-Jul 2023, Aug 2024
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -406,27 +406,77 @@ export default function About() {
             <div>
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">
-                  US Army (2nd Infantry Division) / ROK Army
+                  <a
+                    href="https://en.wikipedia.org/wiki/United_States_Army"
+                    class="text-sky-700 dark:text-sky-300 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    US Army
+                  </a>{" "}
+                  (
+                  <a
+                    href="https://en.wikipedia.org/wiki/2nd_Infantry_Division_(United_States)"
+                    class="text-sky-700 dark:text-sky-300 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    2nd Infantry Division
+                  </a>
+                  ) /{" "}
+                  <a
+                    href="https://en.wikipedia.org/wiki/Republic_of_Korea_Army"
+                    class="text-sky-700 dark:text-sky-300 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    ROK Army
+                  </a>
                 </h3>
                 <span class="text-sm font-mono text-gray-500">
-                  Dongducheon, KR | Mar 2016 - Dec 2017
+                  <a
+                    href="https://en.wikipedia.org/wiki/Dongducheon"
+                    class="text-sky-700 dark:text-sky-300 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Dongducheon
+                  </a>
+                  , South Korea | Mar 2016 - Dec 2017
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
-                Instructor (Sergeant) / KATUSA
+                <a
+                  href="https://en.wikipedia.org/wiki/Korean_Augmentation_to_the_United_States_Army"
+                  class="text-sky-700 dark:text-sky-300 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  KATUSA
+                </a>{" "}
+                | Instructor | Sergeant
               </p>
               <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
                 <li>
-                  Served as a liaison soldier and instructor to ~6,000 American
-                  and Korean personnel.
+                  Served as a liaison soldier and instructor. Educated and
+                  administratively in-processed ~6,000 American and Korean
+                  personnel.
                 </li>
                 <li>
                   Taught fitness, culture, history, and safety/prevention
                   courses.
                 </li>
                 <li>
-                  Maintained operational readiness during the 2017 crisis; led a
-                  team of thirteen.
+                  Maintained operational readiness during the{" "}
+                  <a
+                    href="https://en.wikipedia.org/wiki/2017%E2%80%932018_North_Korea_crisis"
+                    class="text-sky-700 dark:text-sky-300 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    2017 crisis
+                  </a>
+                  ; led a team of thirteen.
                 </li>
               </ul>
             </div>
@@ -435,7 +485,7 @@ export default function About() {
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">Coupang Inc</h3>
                 <span class="text-sm font-mono text-gray-500">
-                  KR | 2020 - 2022
+                  South Korea | 2020 - 2022
                 </span>
               </div>
               <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -461,7 +511,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-2">
               <h3 class="text-lg font-bold">Sungkyunkwan University</h3>
               <span class="text-sm font-mono text-gray-500">
-                Suwon, KR | Mar 2015 - Aug 2023
+                Suwon, South Korea | Mar 2015 - Aug 2023
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
