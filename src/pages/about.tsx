@@ -406,7 +406,7 @@ export default function About() {
             <div>
               <div class="flex flex-wrap justify-between items-baseline mb-1">
                 <h3 class="text-lg font-bold">
-                  US Army (2nd Infantry Division)
+                  US Army (2nd Infantry Division) / ROK Army
                 </h3>
                 <span class="text-sm font-mono text-gray-500">
                   Dongducheon, KR | Mar 2016 - Dec 2017
