@@ -1,313 +1,532 @@
-import { createEffect, Suspense } from "solid-js";
+import { A } from "@solidjs/router";
 
 export default function About() {
   return (
     <section class="bg-sky-50 dark:bg-black text-gray-700 dark:text-gray-100 p-8 min-h-screen transition-colors duration-90">
-      <div class="border-l-4 border-sky-500 dark:border-sky-400 pl-3 mb-4">
+      {/* Header */}
+      <div class="border-l-4 border-sky-500 dark:border-sky-400 pl-3 mb-8">
         <h1 class="text-2xl font-bold mb-1 tracking-tight">About</h1>
-
         <p class="text-xs text-gray-500 dark:text-gray-400">
           Last updated: 2025-11-30
         </p>
       </div>
 
-      <h2 class="text-xl font-semibold mt-2 mb-1">
-        Chi Younghyun / 지영현 / 池營賢
-      </h2>
+      {/* 1) Overview */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">
+          1. Overview
+        </h2>
 
-      <h3 class="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">
-        Backend Software Engineer · Rust / Infra / Data Pipelines
-      </h3>
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold">Young Hyun Chi / 지영현</h3>
+          <p class="text-gray-600 dark:text-gray-400">
+            Backend Software Engineer · Rust / Infra / Data Pipelines
+          </p>
+        </div>
 
-      <div class="flex flex-wrap gap-2 mb-4">
-        <img
-          src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=orange"
-          alt="Rust"
-        />
-        <img
-          src="https://img.shields.io/badge/C-A8B9CC?style=for-the-badge&logo=c&logoColor=white"
-          alt="C"
-        />
-        <img
-          src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=green"
-          alt="Python"
-        />
-        <img
-          src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"
-          alt="Java"
-        />
-        <img
-          src="https://img.shields.io/badge/Axum-000000?style=for-the-badge&logo=rust&logoColor=orange"
-          alt="Axum"
-        />
-        <img
-          src="https://img.shields.io/badge/postgres-000000?style=for-the-badge&logo=postgresql&logoColor=blue"
-          alt="PostgreSQL"
-        />
-        <img
-          src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"
-          alt="MySQL"
-        />
-        <img
-          src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white"
-          alt="AWS"
-        />
-        <img
-          src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white"
-          alt="GCS"
-        />
-        <img
-          src="https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white"
-          alt="Azure"
-        />
-        <img
-          src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"
-          alt="Docker"
-        />
-        <img
-          src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white"
-          alt="PyTorch"
-        />
-        <img
-          src="https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white"
-          alt="Arch Linux"
-        />
-        <img
-          src="https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white"
-          alt="Ubuntu"
-        />
-        <img
-          src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white"
-          alt="Windows"
-        />
-        <img
-          src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white"
-          alt="macOS"
-        />
-      </div>
+        <div class="flex flex-wrap gap-2 mb-6">
+          <img
+            src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=orange"
+            alt="Rust"
+          />
+          <img
+            src="https://img.shields.io/badge/C-A8B9CC?style=for-the-badge&logo=c&logoColor=white"
+            alt="C"
+          />
+          <img
+            src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=green"
+            alt="Python"
+          />
+          <img
+            src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"
+            alt="Java"
+          />
+          <img
+            src="https://img.shields.io/badge/Axum-000000?style=for-the-badge&logo=rust&logoColor=orange"
+            alt="Axum"
+          />
+          <img
+            src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white"
+            alt="PostgreSQL"
+          />
+          <img
+            src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white"
+            alt="AWS"
+          />
+          <img
+            src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"
+            alt="Docker"
+          />
+          <img
+            src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"
+            alt="Linux"
+          />
+        </div>
 
-      <p class="mb-4">
-        I am a backend-focused software engineer with experience shipping and
-        operating services across industrial, consumer, and data-heavy analytics
-        contexts. Most recently, I have been working with <b>Rust</b>,{" "}
-        <b>Axum</b>, <b>PostgreSQL</b>, and <b>AWS</b> to build
-        latency-sensitive systems, optimize infrastructure costs, and integrate
-        a variety of upstream data sources and sensors into reliable, observable
-        services.
-      </p>
+        <p class="mb-4 leading-relaxed">
+          I am a backend-focused software engineer with experience shipping and
+          operating services across industrial, consumer, and data-heavy
+          analytics contexts. Most recently, I have been working with{" "}
+          <b>Rust</b>, <b>Axum</b>, <b>PostgreSQL</b>, and <b>AWS</b> to build
+          latency-sensitive systems, optimize infrastructure costs, and
+          integrate a variety of upstream data sources and sensors into
+          reliable, observable services.
+        </p>
 
-      <p class="mb-4">
-        I graduated from <b>Sungkyunkwan University</b> with a B. Eng in
-        Software Engineering.
-      </p>
+        <p class="mb-6 leading-relaxed">
+          I care about clear, maintainable systems programming; predictable
+          performance; and the ethics and working conditions of STEM workers
+          everywhere. I try to write code and documentation that will be kind to
+          the next maintainer—even if that maintainer is me in six months.
+        </p>
 
-      <p class="mb-6">
-        I care about clear, maintainable systems programming; predictable
-        performance; and the ethics and working conditions of STEM workers
-        everywhere. I try to write code and documentation that will be kind to
-        the next maintainer—even if that maintainer is me in six months.
-      </p>
+        <div class="bg-white dark:bg-gray-900 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-800">
+          <h4 class="font-semibold mb-2">
+            Current Status (Relocation & Career Break)
+          </h4>
+          <p class="text-sm">
+            I recently emigrated to the United States and am currently based in{" "}
+            <b>Colorado Springs, CO</b>. I am navigating fiscal and bureaucratic
+            responsibilities and waiting for an employment authorization
+            document. In the meantime, I am focusing on private projects and
+            continuing to learn and write.
+            <b>
+              I am currently refraining from any paid work activity until
+              federal authorization is granted.
+            </b>
+          </p>
+        </div>
+      </section>
 
-      <h3 class="text-lg font-semibold mt-6 mb-2">Current status</h3>
+      {/* 2) Professional Career */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          2. Professional Career
+        </h2>
 
-      <p class="mb-4">
-        I recently emigrated to the United States and am in the middle of a
-        relocation and career break while I navigate fiscal and bureaucratic
-        responsibilities, set up a new household in Colorado Springs, and wait
-        for an employment permit. I am currently refraining from any work
-        activity (including remote, freelance, and contracting) until federal
-        authorization is granted.
-      </p>
-      <p class="mb-4">
-        In the meantime, I am focusing on private projects—such as this site and
-        a native GUI “Postman clone”—and continuing to learn, write, and stay
-        engaged with the Rust and backend ecosystem.
-      </p>
+        <div class="space-y-8">
+          {/* GenesisNest */}
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">GenesisNest</h3>
+              <span class="text-sm font-mono text-gray-500">
+                Seongnam, KR | Jan 2025 – Jul 2025
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Software Engineer
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Developed infrastructure management tools for in-house services
+                and a K‑Pop group official app using AWS EC2/ECS, load
+                balancers, and Rust.
+              </li>
+              <li>
+                Contracted on Hyundai Motor Company’s Hyundai/Kia/Genesis
+                official app backends, integrating into a large Java codebase.
+              </li>
+              <li>
+                Implemented new APIs and bugfixes, coordinating with vendors for
+                services used by tens of millions of users across Asia and
+                Europe.
+              </li>
+            </ul>
+          </div>
 
-      <h3 class="text-lg font-semibold mt-6 mb-2">Background</h3>
+          {/* pampam */}
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">pampam Inc</h3>
+              <span class="text-sm font-mono text-gray-500">
+                Seoul, KR | Nov 2024 – Dec 2024
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Contract Software Engineer
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Designed PostgreSQL schema and Rust backend for an AI-based
+                YouTube analytics platform.
+              </li>
+              <li>
+                Led large-scale data collection via YouTube API (tens of
+                millions of comments/users).
+              </li>
+              <li>
+                Applied LLMs and on‑server OSS models to engineer insights and
+                summaries.
+              </li>
+            </ul>
+          </div>
 
-      <ul class="mb-4 list-disc list-inside">
-        <li>
-          <b>
-            Relocation &amp; career break (Jul 2025 – Oct 2025, Colorado
-            Springs, CO):
-          </b>{" "}
-          Emigrated to the United States, managed fiscal and bureaucratic
-          processes, got married, and set up a new household in Colorado.
-          Focusing on private projects and learning while waiting for an
-          employment authorization document; not engaged in paid work during
-          this period.
-        </li>
+          {/* EAN Technology */}
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">EAN Technology Co. Ltd</h3>
+              <span class="text-sm font-mono text-gray-500">
+                Seoul, KR | Aug 2023 – Aug 2024
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Backend Software Engineer (Lead)
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                <b>Samsung C&T Digital Twin Project:</b> Decommissioned a
+                dysfunctional microservice architecture, replacing it with a
+                highly optimized Axum (Rust) monolith. Reduced monthly cloud
+                bills from ~$5,000 to ~$150.
+              </li>
+              <li>
+                Contributed ~30,000 LOC (~75% of code) and implemented 80
+                endpoints with complex domain logic.
+              </li>
+              <li>
+                Achieved zero runtime shutdowns and ~90% error handling coverage
+                over nine months of production uptime.
+              </li>
+              <li>
+                Integrated thousands of real-time physical sensors (BACnet,
+                Modbus) and on-prem servers at Samsung C&T Headquarters.
+              </li>
+              <li>
+                Optimized PostgreSQL queries and schema, reducing P99 latency to
+                double-digit ms on constrained hardware (2 cores, 4GB RAM).
+              </li>
+              <li>
+                Implemented CI/CD utilizing GitHub Runners, AWS CodeDeploy, and
+                Docker (producing ~20MB static containers).
+              </li>
+              <li>
+                Mentored coworkers in Rust acquisition, enabling them to
+                transition from Node.js/Java within one month.
+              </li>
+            </ul>
+          </div>
 
-        <li>
-          <b>GenesisNest (Jan 2025 – Jul 2025, Seongnam, South Korea):</b>{" "}
-          Software engineer working on infrastructure management tools for
-          in-house services and a K‑Pop group official app (AWS EC2/ECS, load
-          balancers, Slack bots, Rust), and contracting on Hyundai Motor
-          Company’s Hyundai/Kia/Genesis official app backends. Integrated into a
-          large Java codebase and data pipelines, implemented new APIs and
-          bugfixes, and coordinated with vendors and other teams for services
-          used by tens of millions of users across Asia and Europe.
-        </li>
+          {/* Artifyc */}
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">Artifyc Inc</h3>
+              <span class="text-sm font-mono text-gray-500">
+                Austin, TX (Remote) | Aug 2022 – Mar 2023
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Intern Software Engineer
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Implemented a Discord bot in Python using Reddit API to scrape
+                and post art commission requests.
+              </li>
+              <li>
+                Developed serverless backend logic on AWS Lambda for global
+                monetary conversion and surcharge calculation.
+              </li>
+              <li>
+                Assisted with React frontend revisions and asset integration.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <li>
-          <b>pampam Inc (Nov 2024 – Dec 2024, Seoul, South Korea):</b> Contract
-          software engineer responsible for PostgreSQL schema design, Rust
-          backend, and AWS deployment of an AI (LLM) based YouTube video and
-          creator analytics platform. Led large-scale data collection via the
-          YouTube API (tens of millions of comments/users) and applied LLMs and
-          on‑server OSS models to summarize and engineer insights.
-        </li>
+      {/* 3) Non-IT Career */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          3. Non-IT Career
+        </h2>
 
-        <li>
-          <b>EAN Technology (Sep 2023 – Sep 2024, Seoul, South Korea):</b>{" "}
-          Backend lead for Samsung C&amp;T Digital Twin and AI Energy
-          Management. Replaced a fragile Express/microservice stack with an Axum
-          (Rust) monolith, cutting monthly cloud spend from ~USD 5,000 to ~USD
-          150, and implemented ~80 REST endpoints with high test and
-          error‑handling coverage. Integrated thousands of on‑prem sensors
-          (BACnet, Modbus), tuned performance on constrained hosts, built CI/CD,
-          and coordinated with UE4 frontend and cross‑functional stakeholders.
-          Also led backend for AI Energy Management (tokio‑postgres, raw SQL,
-          greenfield schema), mentoring engineers moving from Node/Java to Rust.
-        </li>
+        <div class="space-y-6">
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">
+                Korea Institute of Maritime Science and Technology
+              </h3>
+              <span class="text-sm font-mono text-gray-500">
+                Seoul, KR | Jun-Jul 2023, Aug 2024
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Translator/Interpreter
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Interpreted (English, Korean, Norwegian) for high-level
+                conferences involving the Norwegian Ambassador and Dongwon Group
+                chairman.
+              </li>
+              <li>
+                Entrusted with details of high-sensitivity state and business
+                transactions concerning maritime R&D.
+              </li>
+              <li>
+                Coached KIMST personnel and director for US Department of Energy
+                events.
+              </li>
+            </ul>
+          </div>
 
-        <li>
-          <b>Earlier work:</b> Short Rust/LLM contracts, translation and
-          interpretation (including high‑level government and diplomatic
-          settings), and instruction roles—most notably as an instructor
-          attached to US Forces Korea, training thousands of personnel in
-          fitness, culture, and soldiering skills.
-        </li>
-      </ul>
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">US Army (2nd Infantry Division)</h3>
+              <span class="text-sm font-mono text-gray-500">
+                Dongducheon, KR | Mar 2016 – Dec 2017
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Instructor (Sergeant) / KATUSA
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Served as a liaison soldier and instructor to ~6,000 American
+                and Korean personnel.
+              </li>
+              <li>
+                Taught fitness, culture, history, and safety/prevention courses.
+              </li>
+              <li>
+                Maintained operational readiness during the 2017 crisis; led a
+                team of thirteen.
+              </li>
+            </ul>
+          </div>
 
-      <h3 class="text-lg font-semibold mt-6 mb-2">Education</h3>
+          <div>
+            <div class="flex flex-wrap justify-between items-baseline mb-1">
+              <h3 class="text-lg font-bold">Coupang Inc</h3>
+              <span class="text-sm font-mono text-gray-500">
+                KR | 2020 – 2022
+              </span>
+            </div>
+            <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+              Loader
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                Intensive manual labor in logistics warehouses during night
+                shifts.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
-      <ul class="mb-4 list-disc list-inside">
-        <li>
-          <b>
-            Sungkyunkwan University (Mar 2015 – Aug 2023) · Bachelor of
-            Engineering, Computer Software Engineering
-          </b>
-          <div class="mt-1 ml-4 space-y-1 text-sm">
+      {/* 4) Academics */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          4. Academics
+        </h2>
+
+        <div class="mb-6">
+          <div class="flex flex-wrap justify-between items-baseline mb-2">
+            <h3 class="text-lg font-bold">Sungkyunkwan University</h3>
+            <span class="text-sm font-mono text-gray-500">
+              Suwon, KR | Mar 2015 – Aug 2023
+            </span>
+          </div>
+          <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
+            B. Eng in Software Engineering
+          </p>
+          <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <p>
               Completed a comprehensive course blending computer science, web
-              and embedded software engineering, and basic electronics, with a
-              classical emphasis on logic, low-level languages, operating
-              systems, and the binary details of network engineering.
-            </p>
-            <p>
-              Graduation paper placed 3rd in the department, was published with
-              IEEE, and presented at IMCOM (an international conference with
-              ~30% acceptance rate).
-            </p>
-            <p>
-              Activities included: journalist at the Sungkyun Times (the
-              university&apos;s official English-language monthly), photographer
-              at SAPA (the central photography club), participation in student
-              organizing, and swimming.
-            </p>
-            <p>
-              Certified Confucian scholar-bureaucrat and, at least in spirit, a
-              small inheritor of the administrative obsessionism of the Kingdom
-              of Joseon.
+              and embedded software engineering, and basic electronics. Focused
+              on logic, low-level languages, operating systems, and network
+              engineering.
             </p>
           </div>
-        </li>
-      </ul>
+        </div>
 
-      <h3 class="text-lg font-semibold mt-6 mb-2">Technology &amp; skills</h3>
-      <ul class="mb-4 list-disc list-inside">
-        <li>
-          <b>Programming:</b> Rust, C, C++, Java, Python, JavaScript/TypeScript,
-          x86 assembly when necessary.
-        </li>
-        <li>
-          <b>Backend &amp; data:</b> Axum, Express, Spring; PostgreSQL, MySQL,
-          MariaDB, SQLite, Redis, and the occasional in-RAM lookup table.
-        </li>
-        <li>
-          <b>Cloud &amp; infra:</b> AWS, Azure, GCP, Oracle Cloud, Naver Cloud;
-          Docker; CI/CD with GitHub Actions and assorted provider tooling.
-        </li>
-        <li>
-          <b>Languages:</b> Korean (native), English (C2), with rudimentary
-          French, German, Spanish, and Mandarin.
-        </li>
-      </ul>
+        <div>
+          <h4 class="font-bold mb-2 text-md">Publications</h4>
+          <ul class="list-disc list-inside text-sm space-y-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <b>
+                Korean Language NLP Model Based Emotional Analysis of Social
+                Media Communities
+              </b>{" "}
+              (IMCOM 2023, IEEE Xplore).
+              <br />
+              <span class="ml-5 block text-xs text-gray-500 mt-1">
+                Utilized KoBERT to perform sentiment analysis on social media
+                data during the early COVID pandemic. Awarded Bronze Prize in
+                Graduation Projects.
+              </span>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-      <h3 class="text-lg font-semibold mt-6 mb-2">Interests</h3>
+      {/* 5) Volunteer work and interests */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          5. Volunteer work & Interests
+        </h2>
 
-      <ul class="mb-4 list-disc list-inside">
-        <li>High-throughput webservers and low-latency APIs</li>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="font-bold mb-3 text-lg">Personal Projects</h3>
+            <ul class="list-disc list-inside text-sm space-y-2 text-gray-700 dark:text-gray-300">
+              <li>
+                <b>oohid:</b> A CLI UUIDv4 generator in Rust. ~3x faster than
+                libuuid. Features duplicate checking and Python/JSON formatting.
+              </li>
+              <li>
+                <b>impulsr:</b> LLM-based YouTube transcription and comment
+                collection tool for marketing summaries.
+              </li>
+            </ul>
+          </div>
 
-        <li>Cache hierarchy and practical performance tuning</li>
+          <div>
+            <h3 class="font-bold mb-3 text-lg">Volunteer Work</h3>
+            <ul class="list-disc list-inside text-sm space-y-2 text-gray-700 dark:text-gray-300">
+              <li>Taught English at a community center.</li>
+              <li>Volunteered at a disabled people run thrift store.</li>
+              <li>
+                Translated materials for a human rights law center concerning
+                West Papua and Sakartvelo.
+              </li>
+            </ul>
+          </div>
+        </div>
 
-        <li>
-          <b>Effective concurrency through asynchrony and parallelism</b>
-        </li>
+        <div class="mt-6">
+          <h3 class="font-bold mb-3 text-lg">Technical Interests</h3>
+          <ul class="flex flex-wrap gap-2 text-sm">
+            {[
+              "High-throughput webservers",
+              "Low-latency APIs",
+              "Cache hierarchy",
+              "Concurrency & Asynchrony",
+              "On-prem infrastructure",
+              "Cost optimization",
+              "CI/CD",
+              "CLI tooling",
+              "Compilers",
+              "Construction engineering",
+            ].map((tag) => (
+              <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300">
+                {tag}
+              </span>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-        <li>
-          <b>On-prem and hybrid infrastructure</b>
-        </li>
+      {/* 6) Hobbies */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          6. Hobbies
+        </h2>
 
-        <li>Cloud infrastructure and cost optimization</li>
+        <div class="space-y-4">
+          <div>
+            <h3 class="font-bold inline mr-2">Photography</h3>
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              Amateur landscape and portrait photographer since 2010. ~30,000
+              photographs archived.
+            </span>
+            <div class="mt-2">
+              <A
+                href="/photographs"
+                class="inline-flex items-center text-sky-600 dark:text-sky-400 hover:underline font-medium"
+              >
+                View Photography Portfolio &rarr;
+              </A>
+            </div>
+          </div>
 
-        <li>CI/CD, deployment pipelines, and release engineering</li>
+          <div>
+            <h3 class="font-bold inline mr-2">Journalism & Film</h3>
+            <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
+              Interested in security and human rights issues (West Papua,
+              Ethiopia, Korean Peninsula). Former student journalist for the
+              Sungkyun Times. Fan of Stanley Kubrick films and meticulous
+              filmmaking.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <li>CLI tooling and automation</li>
+      {/* 7) et cetera */}
+      <section class="mb-12">
+        <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+          7. et cetera
+        </h2>
 
-        <li>Operating systems and compilers</li>
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 class="font-bold mb-2">Qualifications & Awards</h3>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>
+                <b>TOEFL:</b> 117/120 (CEFR C2)
+              </li>
+              <li>
+                <b>IELTS:</b> 8.5/9.0 (CEFR C2)
+              </li>
+              <li>
+                <b>7th Place:</b> 2021 Capstone Design & Idea Hackathon
+              </li>
+              <li>
+                <b>3rd Place:</b> 2020 Fintech Hackathon (SNUST)
+              </li>
+            </ul>
+          </div>
 
-        <li>Construction and electrical engineering</li>
+          <div>
+            <h3 class="font-bold mb-2">Languages</h3>
+            <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
+              <li>Korean (Native)</li>
+              <li>English (C2)</li>
+              <li>Rudimentary French, German, Spanish, Mandarin</li>
+            </ul>
+          </div>
+        </div>
 
-        <li>Video game modding and technical art</li>
-
-        <li>Landscape photography</li>
-
-        <li>Stanley Kubrick films and meticulous filmmaking</li>
-      </ul>
-
-      <h3 class="text-lg font-semibold mt-6 mb-2">Studying</h3>
-
-      <ul class="mb-4 list-disc list-inside">
-        <li>Performance optimization in Rust applications</li>
-
-        <li>Electrical and HVAC systems (for built-environment use cases)</li>
-
-        <li>Native GUI development and desktop tooling</li>
-      </ul>
-
-      <h3 class="text-lg font-semibold mt-6 mb-2">How to reach me</h3>
-      <ul class="mb-4 list-disc list-inside">
-        <li>
-          Email:{" "}
-          <a
-            href="mailto:younghyun1@gmail.com"
-            class="underline text-blue-700 dark:text-blue-300"
-          >
-            younghyun1@gmail.com
-          </a>
-        </li>
-        <li>
-          LinkedIn:{" "}
-          <a
-            href="https://www.linkedin.com/in/young-hyun-chi-553431376/"
-            class="underline text-blue-700 dark:text-blue-300"
-          >
-            https://www.linkedin.com/in/young-hyun-chi-553431376/
-          </a>
-        </li>
-        <li>
-          GitHub:{" "}
-          <a
-            href="https://github.com/younghyun1"
-            class="underline text-blue-700 dark:text-blue-300"
-          >
-            https://github.com/younghyun1
-          </a>
-        </li>
-      </ul>
+        <div>
+          <h3 class="font-bold mb-2">Contact</h3>
+          <ul class="list-none space-y-2 text-sm">
+            <li>
+              <span class="w-20 inline-block font-medium text-gray-500">
+                Email:
+              </span>
+              <a
+                href="mailto:younghyun1@gmail.com"
+                class="text-sky-600 dark:text-sky-400 hover:underline"
+              >
+                younghyun1@gmail.com
+              </a>
+            </li>
+            <li>
+              <span class="w-20 inline-block font-medium text-gray-500">
+                GitHub:
+              </span>
+              <a
+                href="https://github.com/younghyun1"
+                class="text-sky-600 dark:text-sky-400 hover:underline"
+              >
+                github.com/younghyun1
+              </a>
+            </li>
+            <li>
+              <span class="w-20 inline-block font-medium text-gray-500">
+                LinkedIn:
+              </span>
+              <a
+                href="https://linkedin.com/in/younghyun-chi-a60b59a9"
+                class="text-sky-600 dark:text-sky-400 hover:underline"
+              >
+                linkedin.com/in/younghyun-chi-a60b59a9
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
     </section>
   );
 }
