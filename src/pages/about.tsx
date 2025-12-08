@@ -3,27 +3,24 @@ import { A } from "@solidjs/router";
 export default function About() {
   return (
     <section class="bg-sky-50 dark:bg-black text-gray-700 dark:text-gray-100 p-8 min-h-screen transition-colors duration-90">
-      {/* Header */}
       <div class="border-l-4 border-sky-500 dark:border-sky-400 pl-3 mb-8">
         <h1 class="text-2xl font-bold mb-1 tracking-tight">About</h1>
         <p class="text-xs text-gray-500 dark:text-gray-400">
           Last updated: 2025-11-30
         </p>
       </div>
-
-      {/* 1) Overview */}
       <section class="mb-12">
         <h2 class="text-xl font-bold mb-4 border-b border-gray-200 dark:border-gray-800 pb-2">
-          1. Overview
+          1. Introduction
         </h2>
-
         <div class="mb-4">
-          <h3 class="text-lg font-semibold">Young Hyun Chi / 지영현</h3>
+          <h3 class="text-lg font-semibold">
+            Young Hyun Chi / 지영현 / 池營賢 / 池营贤
+          </h3>
           <p class="text-gray-600 dark:text-gray-400">
             Backend Software Engineer · Rust / Infra / Data Pipelines
           </p>
         </div>
-
         <div class="flex flex-wrap gap-2 mb-6">
           <img
             src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=orange"
@@ -62,46 +59,38 @@ export default function About() {
             alt="Linux"
           />
         </div>
-
         <p class="mb-4 leading-relaxed">
           I am a backend-focused software engineer with experience shipping and
           operating services across industrial, consumer, and data-heavy
-          analytics contexts. Most recently, I have been working with{" "}
-          <b>Rust</b>, <b>Axum</b>, <b>PostgreSQL</b>, and <b>AWS</b> to build
-          latency-sensitive systems, optimize infrastructure costs, and
-          integrate a variety of upstream data sources and sensors into
-          reliable, observable services.
+          analytics contexts. My most recent projects have involved building
+          backends, pipelines, and infrastructure for a dashboard integrating
+          input from thousands of environmental sensors for Samsung Construction
+          and Trading and deploying it on AWS, deploying a LLM and scraper based
+          YouTube channel analyzer for a firm serving content creators on GCP,
+          and building backends and data pipelines for a K-Pop group's fan app
+          as well as Hyundai Motor Company's Hyundai, Kia, and Genesis apps.
+          <br></br>I have had a pioneering role in introducing Rust webservers
+          into the Korean startup ecosystem. My coworkers, some of whom I
+          assisted in acquiring the language, are now writing Rust at multiple
+          other companies. I am a strong believer in the ideal of web services
+          that fully utilize the power of modern computers and compilation
+          infrastructures for a safer, more secure web services for the industry
+          and social infrastructures.
+          <br></br>I am proud to have worked in diverse fields, places, and
+          peoples. I was a soldier for 21 months working with the US and Korean
+          military near the North Korean border, and spent some of my student
+          days doing journalism and photography as well as interpretation and
+          translation at a professional level. I've also worked in warehouses
+          and logistics centers doing manual labor. Since 2023, I have been
+          working in various backend roles, and since late 2025, I have been
+          adjusting to life in Colorado after marrying my wife.
         </p>
-
-        <p class="mb-6 leading-relaxed">
-          I care about clear, maintainable systems programming; predictable
-          performance; and the ethics and working conditions of STEM workers
-          everywhere. I try to write code and documentation that will be kind to
-          the next maintainer—even if that maintainer is me in six months.
-        </p>
-
-        <div class="bg-white dark:bg-gray-900 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-800">
-          <h4 class="font-semibold mb-2">
-            Current Status (Relocation & Career Break)
-          </h4>
-          <p class="text-sm">
-            I recently emigrated to the United States and am currently based in{" "}
-            <b>Colorado Springs, CO</b>. I am navigating fiscal and bureaucratic
-            responsibilities and waiting for an employment authorization
-            document. In the meantime, I am focusing on private projects and
-            continuing to learn and write.
-            <b>
-              I am currently refraining from any paid work activity until
-              federal authorization is granted.
-            </b>
-          </p>
-        </div>
       </section>
 
       {/* 2) Professional Career */}
       <section class="mb-12">
         <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
-          2. Professional Career
+          2. Developer Career
         </h2>
 
         <div class="space-y-8">
@@ -110,7 +99,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">GenesisNest</h3>
               <span class="text-sm font-mono text-gray-500">
-                Seongnam, KR | Jan 2025 – Jul 2025
+                Seongnam, KR | Jan 2025 - Jul 2025
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -119,8 +108,8 @@ export default function About() {
             <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
               <li>
                 Developed infrastructure management tools for in-house services
-                and a K‑Pop group official app using AWS EC2/ECS, load
-                balancers, and Rust.
+                and a K‑Pop group official app. Became familiar with the Spring
+                Boot ecosystem.
               </li>
               <li>
                 Contracted on Hyundai Motor Company’s Hyundai/Kia/Genesis
@@ -131,6 +120,13 @@ export default function About() {
                 services used by tens of millions of users across Asia and
                 Europe.
               </li>
+              <li>
+                Established data pipelines for their internationalization work,
+                writing several Rust and Python scripts to automate the
+                integration of translated content into the Hyundai database.
+                Coordinated with corporate DBAs dealing with very large datasets
+                connected to the company's factory systems.
+              </li>
             </ul>
           </div>
 
@@ -139,7 +135,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">pampam Inc</h3>
               <span class="text-sm font-mono text-gray-500">
-                Seoul, KR | Nov 2024 – Dec 2024
+                Seoul, KR | Nov 2024 - Dec 2024
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -148,7 +144,8 @@ export default function About() {
             <ul class="list-disc list-inside text-sm space-y-1 text-gray-700 dark:text-gray-300">
               <li>
                 Designed PostgreSQL schema and Rust backend for an AI-based
-                YouTube analytics platform.
+                YouTube analytics platform, and led deployment efforts on AWS
+                and GCP.
               </li>
               <li>
                 Led large-scale data collection via YouTube API (tens of
@@ -166,7 +163,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">EAN Technology Co. Ltd</h3>
               <span class="text-sm font-mono text-gray-500">
-                Seoul, KR | Aug 2023 – Aug 2024
+                Seoul, KR | Aug 2023 - Aug 2024
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -189,19 +186,22 @@ export default function About() {
               </li>
               <li>
                 Integrated thousands of real-time physical sensors (BACnet,
-                Modbus) and on-prem servers at Samsung C&T Headquarters.
+                Modbus) and on-prem servers at Samsung C&amp;T Headquarters.
               </li>
               <li>
                 Optimized PostgreSQL queries and schema, reducing P99 latency to
-                double-digit ms on constrained hardware (2 cores, 4GB RAM).
+                double-digit ms on constrained hardware (2 cores, 4GB RAM) from
+                several seconds on some unoptimized queries.
               </li>
               <li>
                 Implemented CI/CD utilizing GitHub Runners, AWS CodeDeploy, and
-                Docker (producing ~20MB static containers).
+                Docker. Utilized MUSL, static linking, and multistage builds
+                with 'scratch' images to produce ~20MB Docker images for extra
+                security and cold start efficiency.
               </li>
               <li>
                 Mentored coworkers in Rust acquisition, enabling them to
-                transition from Node.js/Java within one month.
+                transition from Node.js/Java within two months.
               </li>
             </ul>
           </div>
@@ -211,7 +211,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">Artifyc Inc</h3>
               <span class="text-sm font-mono text-gray-500">
-                Austin, TX (Remote) | Aug 2022 – Mar 2023
+                Austin, TX (Remote) | Aug 2022 - Mar 2023
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -261,7 +261,8 @@ export default function About() {
               </li>
               <li>
                 Entrusted with details of high-sensitivity state and business
-                transactions concerning maritime R&D.
+                transactions and discussions related to maritime research and
+                development.
               </li>
               <li>
                 Coached KIMST personnel and director for US Department of Energy
@@ -274,7 +275,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">US Army (2nd Infantry Division)</h3>
               <span class="text-sm font-mono text-gray-500">
-                Dongducheon, KR | Mar 2016 – Dec 2017
+                Dongducheon, KR | Mar 2016 - Dec 2017
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -299,7 +300,7 @@ export default function About() {
             <div class="flex flex-wrap justify-between items-baseline mb-1">
               <h3 class="text-lg font-bold">Coupang Inc</h3>
               <span class="text-sm font-mono text-gray-500">
-                KR | 2020 – 2022
+                KR | 2020 - 2022
               </span>
             </div>
             <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -325,7 +326,7 @@ export default function About() {
           <div class="flex flex-wrap justify-between items-baseline mb-2">
             <h3 class="text-lg font-bold">Sungkyunkwan University</h3>
             <span class="text-sm font-mono text-gray-500">
-              Suwon, KR | Mar 2015 – Aug 2023
+              Suwon, KR | Mar 2015 - Aug 2023
             </span>
           </div>
           <p class="text-sm font-medium mb-2 text-sky-600 dark:text-sky-400">
@@ -334,9 +335,9 @@ export default function About() {
           <div class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <p>
               Completed a comprehensive course blending computer science, web
-              and embedded software engineering, and basic electronics. Focused
-              on logic, low-level languages, operating systems, and network
-              engineering.
+              and embedded software engineering, and electronics engineering.
+              Focused on logic, low-level languages, operating systems, and
+              network engineering as well as software engineering practices.
             </p>
           </div>
         </div>
@@ -453,10 +454,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* 7) et cetera */}
+      {/* 7) Qualifications and Other Skills */}
       <section class="mb-12">
         <h2 class="text-xl font-bold mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
-          7. et cetera
+          7. Qualifications and Other Skills
         </h2>
 
         <div class="grid md:grid-cols-2 gap-8 mb-8">
