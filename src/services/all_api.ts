@@ -150,6 +150,7 @@ async function del<T = any>(
 export const healthApi = {
   server: async () => await get("/api/healthcheck/server"),
   state: async () => await get("/api/healthcheck/state"),
+  fastfetch: async () => await get("/api/healthcheck/fastfetch"),
 };
 
 export const photographyApi = {
