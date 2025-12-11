@@ -80,7 +80,7 @@ const TopBar = () => (
               href="/"
               class="shrink-0 text-lg sm:text-xl md:text-2xl font-bold tracking-tight whitespace-nowrap"
             >
-              <span class="block md:hidden text-2xl">📰</span>
+              <span class="block md:hidden text-2xl">Home</span>
               <span class="hidden md:block">Younghyun&apos;s Blog</span>
             </a>
 
