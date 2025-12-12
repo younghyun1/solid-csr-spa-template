@@ -49,7 +49,7 @@ const App: Component = (props: { children: Element }) => {
     >
       <TopBar />
 
-      <main class="flex-1 min-h-0 pb-10">
+      <main class="flex-1 min-h-0 pb-10 pt-12 sm:pt-14">
         <Suspense>{props.children}</Suspense>
       </main>
 

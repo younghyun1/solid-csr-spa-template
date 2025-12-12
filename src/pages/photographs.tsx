@@ -893,7 +893,7 @@ export default function Photographs() {
                 </button>
               </Show>
 
-              {/* (Close button and Open Original link remain unchanged) */}
+              {/* Open original / View image */}
               <a
                 href={selectedPhoto()!.photograph_link}
                 target="_blank"
@@ -901,8 +901,28 @@ export default function Photographs() {
                 // ADDED: nav-btn class (optional, if you want this to fade too)
                 class="nav-btn absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-sm transition-colors"
                 title="Open original"
+                aria-label="Open original image in a new tab"
               >
-                {/* ... svg ... */}
+                {/* External link icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="w-6 h-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13.5 6H18m0 0v4.5M18 6l-7.5 7.5"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10.5 6H7.5A1.5 1.5 0 006 7.5v9A1.5 1.5 0 007.5 18h9a1.5 1.5 0 001.5-1.5V13.5"
+                  />
+                </svg>
               </a>
             </div>
             <div class="details-info bg-white dark:bg-gray-800">
