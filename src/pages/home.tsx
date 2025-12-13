@@ -7,23 +7,19 @@ export default function Home() {
     blogApi.getPosts({ page: 1, posts_per_page: 3 }),
   );
   const [photos] = createResource(() => photographyApi.getPhotographs(1, 4));
-  const [sysInfo] = createResource(async () => {
-    try {
-      const res = await healthApi.fastfetch();
-      // Handle potential ApiResponse wrapper or direct response
-      return (res as any).data || res;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  });
 
   // Helper to extract photo items safely
   const getPhotoItems = () => {
-    const data = photos();
-    if (!data) return [];
-    // Handle both { data: { photographs: [] } } and { photographs: [] } patterns
-    return (data as any).data?.photographs || (data as any).photographs || [];
+    const res = photos();
+    if (!res) return [];
+    
+    const payload = (res as any).data || res;
+
+    if (payload?.data?.items) {
+      return payload.data.items;
+    }
+    
+    return payload?.items || [];
   };
 
   return (
@@ -258,47 +254,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-
-      {/* System Status / CLI Footer */}
-      <section class="mt-auto bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-        <div class="max-w-7xl mx-auto px-6 py-12">
-          <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-            <div>
-              <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 font-mono">
-                &gt; host stats
-              </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Live metrics from the backend server.
-              </p>
-            </div>
-            <A
-              href="/backend-stats"
-              class="px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider border border-gray-300 dark:border-gray-600 rounded hover:bg-white dark:hover:bg-gray-800 transition-colors"
-            >
-              Full Dashboard
-            </A>
-          </div>
-
-          <div class="bg-black text-green-400 p-6 rounded-lg shadow-inner font-mono text-xs sm:text-sm overflow-hidden border border-gray-800 relative group">
-            <Suspense
-              fallback={
-                <div class="animate-pulse">Loading system telemetry...</div>
-              }
-            >
-              <Show
-                when={sysInfo()}
-                fallback={
-                  <div class="text-red-500">System metrics unavailable.</div>
-                }
-              >
-                <div class="overflow-x-auto max-h-64 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-                  <pre innerHTML={sysInfo()} class="leading-relaxed" />
-                </div>
-              </Show>
-            </Suspense>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
