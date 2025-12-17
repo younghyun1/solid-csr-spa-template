@@ -83,6 +83,15 @@ export default function PostViewPage() {
     Record<string, string | null>
   >({});
 
+  const [editOpen, setEditOpen] = createStore<Record<string, boolean>>({});
+  const [editText, setEditText] = createStore<Record<string, string>>({});
+  const [editLoading, setEditLoading] = createStore<Record<string, boolean>>(
+    {},
+  );
+  const [editError, setEditError] = createStore<Record<string, string | null>>(
+    {},
+  );
+
   const handleDeletePost = async () => {
     if (!confirm("Are you sure you want to delete this post?")) return;
     try {
@@ -111,7 +120,9 @@ export default function PostViewPage() {
     const originalPostState = postResource()?.post;
     const originalCommentState =
       type === "comment" && ids.commentId
-        ? postResource()?.comments.find((c) => c.comment_id === ids.commentId)
+        ? (postResource()?.comments.find(
+            (c) => c.comment_id === ids.commentId,
+          ) ?? localComments[ids.commentId])
         : undefined;
 
     if (type === "post" && !originalPostState) return;
@@ -264,6 +275,39 @@ export default function PostViewPage() {
     }
   };
 
+  const toggleEdit = (comment: any) => {
+    const current = !!editOpen[comment.comment_id];
+    if (current) {
+      setEditOpen(comment.comment_id, false);
+      setEditText(comment.comment_id, "");
+      setEditError(comment.comment_id, null);
+    } else {
+      setEditOpen(comment.comment_id, true);
+      setEditText(comment.comment_id, comment.comment_content);
+      setReplyOpen(comment.comment_id, false);
+    }
+  };
+
+  const handleUpdateComment = async (commentId: string) => {
+    const content = (editText[commentId] ?? "").trim();
+    if (!content) return;
+    setEditLoading(commentId, true);
+    setEditError(commentId, null);
+    try {
+      await blogApi.updateComment(
+        { comment_content: content },
+        postId(),
+        commentId,
+      );
+      refetch();
+      setEditOpen(commentId, false);
+    } catch (err: any) {
+      setEditError(commentId, err?.message ?? "Failed to update comment");
+    } finally {
+      setEditLoading(commentId, false);
+    }
+  };
+
   function buildCommentTree(flatComments: any[]): any[] {
     const commentsById: Record<string, any> = {};
     const roots: any[] = [];
@@ -370,9 +414,48 @@ export default function PostViewPage() {
                   {new Date(comment.comment_created_at).toLocaleString()}
                 </span>
               </div>
-              <div class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                {comment.comment_content}
-              </div>
+              <Show
+                when={editOpen[comment.comment_id]}
+                fallback={
+                  <div class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                    {comment.comment_content}
+                  </div>
+                }
+              >
+                <div class="mt-2">
+                  <textarea
+                    class="w-full min-h-[80px] border rounded p-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700"
+                    value={editText[comment.comment_id] ?? ""}
+                    onInput={(e) =>
+                      setEditText(comment.comment_id, e.currentTarget.value)
+                    }
+                  />
+                  <Show when={editError[comment.comment_id]}>
+                    <div class="text-sm text-red-600">
+                      {editError[comment.comment_id]}
+                    </div>
+                  </Show>
+                  <div class="mt-2 flex items-center gap-2">
+                    <button
+                      class="bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold disabled:opacity-60"
+                      disabled={
+                        editLoading[comment.comment_id] ||
+                        !(editText[comment.comment_id] ?? "").trim()
+                      }
+                      onClick={() => handleUpdateComment(comment.comment_id)}
+                    >
+                      {editLoading[comment.comment_id] ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      class="px-3 py-1 rounded text-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                      onClick={() => toggleEdit(comment)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </Show>
               <div class="flex items-center gap-2 mt-2 mb-1">
                 <button
                   class={`text-lg px-1 ${voteState() === 0 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
@@ -414,9 +497,17 @@ export default function PostViewPage() {
                 <Show
                   when={
                     user()?.user_info?.user_id &&
-                    (comment as any).user_id === user()?.user_info?.user_id
+                    ((comment as any).user_id === user()?.user_info?.user_id ||
+                      postResource()?.post?.user_id ===
+                        user()?.user_info?.user_id)
                   }
                 >
+                  <button
+                    class="text-xs text-gray-600 hover:underline dark:text-gray-400"
+                    onClick={() => toggleEdit(comment)}
+                  >
+                    Edit
+                  </button>
                   <button
                     class="text-xs text-red-600 hover:underline dark:text-red-400"
                     onClick={() => handleDeleteComment(comment.comment_id)}
@@ -545,12 +636,22 @@ export default function PostViewPage() {
                             user()?.user_info?.user_id
                         }
                       >
-                        <button
-                          class="text-sm text-red-600 border border-red-600 rounded px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 transition whitespace-nowrap ml-4"
-                          onClick={handleDeletePost}
-                        >
-                          Delete Post
-                        </button>
+                        <div class="flex gap-2 ml-4">
+                          <button
+                            class="text-sm text-blue-600 border border-blue-600 rounded px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition whitespace-nowrap"
+                            onClick={() =>
+                              navigate(`/blog/${data().post.post_id}/edit`)
+                            }
+                          >
+                            Edit Post
+                          </button>
+                          <button
+                            class="text-sm text-red-600 border border-red-600 rounded px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 transition whitespace-nowrap"
+                            onClick={handleDeletePost}
+                          >
+                            Delete Post
+                          </button>
+                        </div>
                       </Show>
                     </div>
                     <div class="flex items-center text-sm text-gray-400 mb-2">

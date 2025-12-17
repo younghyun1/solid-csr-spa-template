@@ -121,6 +121,40 @@ async function postFormData<T = any>(
 }
 
 /**
+ * Generic HTTP PATCH
+ */
+async function patch<T = any>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const url = interpolate(path, options.params);
+  const fetchOpts: RequestInit = {
+    ...options,
+    method: "PATCH",
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  };
+  const res = await apiFetch(url, fetchOpts);
+  if (!res.ok) throw new Error(await res.text());
+  // Handle 204/empty-body responses gracefully for side-effect endpoints (e.g., vote rescinds)
+  if (res.status === 204) {
+    return undefined as unknown as T;
+  }
+  const contentLength = res.headers.get("content-length");
+  if (contentLength === "0") {
+    return undefined as unknown as T;
+  }
+  try {
+    return await res.json();
+  } catch {
+    return undefined as unknown as T;
+  }
+}
+
+/**
  * Generic HTTP DELETE
  */
 async function del<T = any>(
@@ -308,6 +342,14 @@ export const blogApi = {
     }),
   submitPost: async (body: SubmitPostRequest) =>
     await post<ApiResponse<SubmitPostResponse>>("/api/blog/posts", { body }),
+  updatePost: async (
+    body: Omit<SubmitPostRequest, "post_id">,
+    post_id: string,
+  ) =>
+    await patch<ApiResponse<SubmitPostResponse>>("/api/blog/{post_id}", {
+      body,
+      params: { post_id },
+    }),
   // Add voting and commenting endpoints
   votePost: async (body: UpvotePostRequest, post_id: string) =>
     await post<ApiResponse<VotePostResponse>>("/api/blog/{post_id}/vote", {
@@ -336,6 +378,15 @@ export const blogApi = {
     await post<ApiResponse<SubmitCommentResponse>>(
       "/api/blog/{post_id}/comment",
       { body, params: { post_id } },
+    ),
+  updateComment: async (
+    body: { comment_content: string },
+    post_id: string,
+    comment_id: string,
+  ) =>
+    await patch<ApiResponse<SubmitCommentResponse>>(
+      "/api/blog/{post_id}/{comment_id}",
+      { body, params: { post_id, comment_id } },
     ),
   deletePost: async (post_id: string) =>
     await del<ApiResponse<DeletePostResponse>>("/api/blog/{post_id}", {
@@ -372,7 +423,7 @@ export const visitorBoardApi = {
   getVisitorBoard: async () => await get("/api/visitor-board"),
 };
 
-export { get, post, del, interpolate };
+export { get, post, patch, del, interpolate };
 
 /**
  * Usage Example:
