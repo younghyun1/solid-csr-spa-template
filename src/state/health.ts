@@ -22,7 +22,8 @@ export const parseUptimeToMs = (uptime: string | undefined): number | null => {
     const value = Number(numStr);
     if (!Number.isFinite(value)) continue;
     const unit = unitRaw ?? "";
-    if (unit.startsWith("hour")) total += value * 60 * 60 * 1000;
+    if (unit.startsWith("day")) total += value * 24 * 60 * 60 * 1000;
+    else if (unit.startsWith("hour")) total += value * 60 * 60 * 1000;
     else if (unit.startsWith("minute")) total += value * 60 * 1000;
     else if (unit.startsWith("second")) total += value * 1000;
     else if (unit.startsWith("millisecond")) total += value;
@@ -34,10 +35,12 @@ export const formatUptimeMs = (ms: number | null): string => {
   if (ms == null || !Number.isFinite(ms) || ms < 0) return "–";
 
   const totalSec = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSec / 3600);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
   const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
 
+  if (days > 0) return `${days}d ${hours}h ${mins}m ${secs}s`;
   if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
   if (mins > 0) return `${mins}m ${secs}s`;
   return `${secs}s`;
