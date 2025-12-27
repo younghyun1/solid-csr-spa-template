@@ -11,7 +11,7 @@ interface MarkdownEditorProps {
   textareaClass?: string;
 }
 
-export default function MarkdownEditor(
+  export default function MarkdownEditor(
   props: MarkdownEditorProps,
 ): JSX.Element {
   let textareaRef: HTMLTextAreaElement | undefined;
