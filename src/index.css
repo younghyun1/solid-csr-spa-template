@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Ensure full height for root elements so flex layouts can vertically center properly */
 html,
 body,
