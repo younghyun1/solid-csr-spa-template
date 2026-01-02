@@ -207,15 +207,15 @@ export default function About() {
             fast, secure, reliable systems.
           </p>
           <p class="mb-4 leading-relaxed">
-            I am proud to have worked across diverse fields with a range of
-            coworkers from many cultures and backgrounds. From 2016 to 2017, I
-            served for 21 months near the North Korean border with the 2nd
-            Infantry Division of the US Army, working with both US and Korean
-            military personnel. During my studies, I also worked professionally
-            in journalism, photography, and translation. I have also performed
-            manual labor in warehouses and logistics centers. Since 2023, I have
-            focused on backend engineering. As of late 2025, I am adjusting to
-            life in Colorado after getting married.
+            I am proud to have worked across diverse fields and with coworkers
+            from many cultures and backgrounds. From 2016 to 2017, I served for
+            21 months near the North Korean border with the 2nd Infantry
+            Division of the US Army, working with both US and Korean military
+            personnel. During my university studies, I also did work in in
+            journalism, photography, and translation. I have also performed
+            manual labor in warehouses and logistics centers as well as the
+            military. Since 2023, my career has been focused on backend
+            engineering and data analytics and pipelines.
           </p>
         </section>
 
