@@ -6,7 +6,7 @@ export default function Home() {
   const [posts] = createResource(() =>
     blogApi.getPosts({ page: 1, posts_per_page: 3 }),
   );
-  const [photos] = createResource(() => photographyApi.getPhotographs(1, 4));
+  const [photos] = createResource(() => photographyApi.getPhotographs(1, 8));
 
   // Helper to extract photo items safely
   const getPhotoItems = () => {
@@ -147,8 +147,8 @@ export default function Home() {
                               undefined,
                               {
                                 year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
+                                month: "long",
+                                day: "numeric",
                               },
                             )}
                           </span>
@@ -162,10 +162,6 @@ export default function Home() {
                             {post.post_title}
                           </A>
                         </h3>
-                        <p class="text-zinc-600 dark:text-zinc-400 line-clamp-2 text-sm mt-2 font-mono opacity-80">
-                          {/* Decorative snippet to look like code/preview */}
-                          &gt; Click to decrypt contents...
-                        </p>
                       </div>
                     </article>
                   )}
@@ -193,7 +189,7 @@ export default function Home() {
             <Suspense
               fallback={
                 <>
-                  {[1, 2, 3, 4].map(() => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(() => (
                     <div class="aspect-square bg-zinc-200 dark:bg-zinc-800 animate-pulse border border-zinc-300 dark:border-zinc-700"></div>
                   ))}
                 </>
@@ -225,7 +221,7 @@ export default function Home() {
                       {/* Crosshair overlay effect */}
                       <div class="absolute inset-0 border-2 border-transparent group-hover:border-purple-500/50 transition-colors pointer-events-none z-10"></div>
                       <div class="absolute top-2 right-2 text-[10px] font-mono bg-black text-white px-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        IMG_{photo.photograph_id}
+                        {photo.photograph_id}
                       </div>
                     </A>
                   )}
